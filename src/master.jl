@@ -242,24 +242,27 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         push!(errors3,  R2(transpose(data_final[i]), nodes_outputdata[i]))
     end
     println(errors3)
-    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_MSE.txt"
+
+    prefix=archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)
+    
+    archivo=prefix*"_MSE.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, join(map(x->string(x),errors),",")*"\n")
     end
-    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_MAPE.txt"
+    archivo=prefix*"_MAPE.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, join(map(x->string(x),errors2),",")*"\n")
     end
-    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_R2.txt"
+    archivo=prefix*"_R2.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, join(map(x->string(x),errors3),",")*"\n")
     end
-    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_time.txt"
+    archivo=prefix*"_time.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, string(elapsed_time)*"\n")
     end
     find_nodes = length(counts(neighborhoods))
-    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_node.txt"
+    archivo=prefix*"_node.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, string(find_nodes == num_nodes)*"\n")
     end
