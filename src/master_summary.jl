@@ -189,7 +189,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
             maxmins[(idx,pid)] = toc()
             #TODO use differente files to prevent concorrence among the threads
             f = open("measurements/maxmims_time.json","a+")
-            write(f,JSON.json(maxmins))            
+            write(f,JSON.json(maxmins))
+            
             flush(f)
             close(f)
             #exit()            
@@ -216,10 +217,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         info("Training local models")
         localtraining_time = Dict()
         for (idx, pid) in enumerate(workers())
-            # Naelson: START Local Training Time!!!!!
-            tic()			
-            @async remotecall_fetch(train_local_model, pid)          
-            localtraining_time[(idx,pid)] = toc()
+            # Naelson: START Local Training Time!!!!!            
+            @async remotecall_fetch(train_local_model, pid)                      
             # Naelson: STOP Local Training Time!!!!!
         end
         f = open("easurements/localtraining_time.json","a+")
