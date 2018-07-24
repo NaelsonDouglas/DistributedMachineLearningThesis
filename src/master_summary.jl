@@ -3,8 +3,18 @@ using Mocha
 using MultivariateStats
 using JLD
 using Logging
+using JSON
 include("datasets.jl")
 include("statistics.jl")
+
+measures = Dict()
+
+tic()
+toc()
+
+function savemeasures()
+    f = open()
+end
 
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
@@ -167,13 +177,25 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
     @sync for (idx, pid) in enumerate(workers())
+        maxmins = Array{Dict}(1)
+        maxmins = Dict()
+        tic()
         @async begin
             metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim)
             remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim)
             # Naelson: START Maximum and Minimum Time Measure!!!!!
-            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)
+            tic()            
+            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)            
+            maxmins[(idx,pid)] = toc()
+            #TODO use differente files to prevent concorrence among the threads
+            f = open("measurements/maxmims_time.json","a+")
+            write(f,JSON.json(maxmins))            
+            flush(f)
+            close(f)
+            #exit()            
             # Naelson: STOP Maximum and Minimum Time Measure!!!!!
-        end
+        end               
+       
     end
     examples, attributes = metadata[1]
     info("We have $(string(attributes)) attributes and $(string(examples)) examples")
@@ -181,20 +203,30 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Calculating histograms...")
     # Naelson: START Histogram Creation Share Time!!!!!
-
+    tic()
     nodes_stats = Array{Any}(nofworkers)
     @sync for (idx, pid) in enumerate(workers())
         #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics)
         @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
     end
+    measures["histogram_time"] = toc()
     # Naelson: STOP Histogram Creation Share Time!!!!!	
+
     @sync begin
         info("Training local models")
+        localtraining_time = Dict()
         for (idx, pid) in enumerate(workers())
-            # Naelson: START Local Training Time!!!!!			
-            @async remotecall_fetch(train_local_model, pid)
+            # Naelson: START Local Training Time!!!!!
+            tic()			
+            @async remotecall_fetch(train_local_model, pid)          
+            localtraining_time[(idx,pid)] = toc()
             # Naelson: STOP Local Training Time!!!!!
         end
+        f = open("easurements/localtraining_time.json","a+")
+        write(f,JSON.json(localtraining_time))
+        flush(f)
+        close(f)
+
         info("Calculating neighborhoods...")
         # Naelson: START Calculate Neighborhood (Clustering) Time!!!!!
         #neighborhoods = create_neighborhoods(nodes_histograms)
