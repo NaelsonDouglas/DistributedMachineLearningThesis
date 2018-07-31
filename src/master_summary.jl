@@ -7,14 +7,10 @@ using JSON
 include("datasets.jl")
 include("statistics.jl")
 
-measures = Dict()
+measures = Dict{Any,Dict}()
 
 tic()
 toc()
-
-function savemeasures()
-    f = open()
-end
 
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
@@ -24,6 +20,13 @@ end
 #  histograms: vector containing all the histograms of the nodes.
 #  Returns: vector where the i-th position is the cluster of the i-th node
 ###
+
+function savemeasures()
+    f = open("measurements/measurements.json","w+")
+    write(f,JSON.json(measures))
+    flush(f)
+    close(f)
+end
 
 function create_neighborhoods_stats(stats, tolerance=0.05)
     tolerance = 0.
@@ -176,28 +179,32 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     info("Generating datasets and calculating maximums and minimums")
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
-    @sync for (idx, pid) in enumerate(workers())
-        maxmins = Array{Dict}(1)
-        maxmins = Dict()
-        tic()
+    measures["maxmimtime"] = Dict()
+    @sync for (idx, pid) in enumerate(workers())       
+        
         @async begin
+            tic()
             metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim)
             remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim)
-            # Naelson: START Maximum and Minimum Time Measure!!!!!
-            tic()            
-            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)            
-            maxmins[(idx,pid)] = toc()
-            #TODO use differente files to prevent concorrence among the threads
-            f = open("measurements/maxmims_time.json","a+")
-            write(f,JSON.json(maxmins))
-            
-            flush(f)
-            close(f)
-            #exit()            
+            # Naelson: START Maximum and Minimum Time Measure!!!!!                    
+            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)                        
+            #TODO use differente files to prevent concorrence among the threads                    
             # Naelson: STOP Maximum and Minimum Time Measure!!!!!
-        end               
-       
+            exectime = toc()
+            measures["maxmimtime"][(idx,pid)] = Dict(idx=>exectime)
+        end  
+        
     end
+    println("=======================")
+    println(measures)
+    println("=======================")
+    f = open("measurements/measurements.json","w+")
+    write(f,JSON.json(measures))
+    flush(f)
+    close(f)
+    println("=======================")
+    
+
     examples, attributes = metadata[1]
     info("We have $(string(attributes)) attributes and $(string(examples)) examples")
     info("Calculating global max and global min...")
@@ -217,11 +224,12 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         info("Training local models")
         localtraining_time = Dict()
         for (idx, pid) in enumerate(workers())
-            # Naelson: START Local Training Time!!!!!            
+            # Naelson: START Local Training Time!!!!!
+            
             @async remotecall_fetch(train_local_model, pid)                      
             # Naelson: STOP Local Training Time!!!!!
         end
-        f = open("easurements/localtraining_time.json","a+")
+        f = open("measurements/localtraining_time.json","a+")
         write(f,JSON.json(localtraining_time))
         flush(f)
         close(f)
@@ -333,6 +341,10 @@ end
 function execute_experiment()
     # params checking
     # params order N_LOCAL, N_EXAMPLES, FUNCION, SEED, N_CLUSTER, DIM
+    println("------------------------")
+    println(ARGS)
+    println("------------------------")
+    
     if length(ARGS) < 3
         error("You need to specify the number of procs to use or data examples per node!")
         quit()
