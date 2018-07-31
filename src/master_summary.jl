@@ -181,7 +181,6 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     metadata = Array{Any}(1)
     measures["maxmimtime"] = Dict()
     @sync for (idx, pid) in enumerate(workers())       
-        
         @async begin
             tic()
             metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim)
@@ -196,12 +195,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         
     end
     println("=======================")
-    println(measures)
-    println("=======================")
-    f = open("measurements/measurements.json","w+")
-    write(f,JSON.json(measures))
-    flush(f)
-    close(f)
+    println(measures)   
+    savemeasures()
     println("=======================")
     
 
@@ -210,36 +205,47 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     info("Calculating global max and global min...")
 
     info("Calculating histograms...")
-    # Naelson: START Histogram Creation Share Time!!!!!
+    
+    
+    # Naelson: START Histogram Creation Share Time!!!!! 
     tic()
+    measures["histogram"] = Dict()
     nodes_stats = Array{Any}(nofworkers)
     @sync for (idx, pid) in enumerate(workers())
         #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics)
         @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
-    end
-    measures["histogram_time"] = toc()
+    end    
     # Naelson: STOP Histogram Creation Share Time!!!!!	
+    measures["histogram"]["time"] = Dict(1=>toc())
+    savemeasures()
+
+
+
 
     @sync begin
         info("Training local models")
-        localtraining_time = Dict()
-        for (idx, pid) in enumerate(workers())
+        measures["local_training"] = Dict()
+        @async for (idx, pid) in enumerate(workers())
             # Naelson: START Local Training Time!!!!!
-            
-            @async remotecall_fetch(train_local_model, pid)                      
+            tic()           
+            remotecall_fetch(train_local_model, pid)                      
             # Naelson: STOP Local Training Time!!!!!
+            
+            exectime = toc()            
+            measures["local_training"][(idx,pid)] = exectime
         end
-        f = open("measurements/localtraining_time.json","a+")
-        write(f,JSON.json(localtraining_time))
-        flush(f)
-        close(f)
+        savemeasures()
 
         info("Calculating neighborhoods...")
         # Naelson: START Calculate Neighborhood (Clustering) Time!!!!!
+        
+        measures["clustering"] = Dict()
+        tic()
         #neighborhoods = create_neighborhoods(nodes_histograms)
         neighborhoods = create_neighborhoods_stats_kmeans(nodes_stats)
-
+        #TODO put the previous line out of the block
     end
+
     info("Done training local models")
     info("Done calculating neighborhoods")
 
@@ -259,7 +265,13 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Done generating neighborhoods for every node")
     # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
+    measures["clustering"] = Dict(1=>toc())
+
+
+
     # Naelson: START Train Global Model Time!!!!!
+    measures["global_model"] = Dict()
+    tic()
     nodes_global_models = Array{Any}(nofworkers)
     @sync begin
         info("Training global model")
@@ -268,7 +280,13 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         end
     end
     # Naelson: STOP Train Global Model Time!!!!!
+    measures["clustering"] = Dict(1=>toc())
+
+
+
     # Naelson: START Testing Model Time!!!!!
+    measures["train_global_model"] = Dict()
+    tic()
     info("Done training global model")
 
     nodes_outputdata = Array{Any}(nofworkers)
@@ -292,7 +310,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         push!(data_final, final_output(nodes_test_data_evaluated[idx], idx, nodes_global_models, nodes_neighbors, examples))
     end
     # Naelson: STOP Testing Model Time!!!!!
-    elapsed_time = toc()
+    measures["train_global_model"] = Dict(1 => toc())    
+    savemeasures()
 
     errors=[]
     for i in 1:nofworkers

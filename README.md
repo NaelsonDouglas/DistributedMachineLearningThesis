@@ -1,5 +1,6 @@
 # RUN
 julia -L master_summary.jl -e "execute_experiment()" $n_procs $n_samples $function $seed $num_nodes $dim_func
+
 julia -L master.jl -e "execute_experiment()" $n_procs $n_samples $function $seed $num_nodes $dim_func
 # Por ejemplo:
 julia -L master_summary.jl -e "execute_experiment()" 8 100 f1 1234 4 2
