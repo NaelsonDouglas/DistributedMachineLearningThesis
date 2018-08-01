@@ -223,16 +223,19 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
 
     @sync begin
-        info("Training local models")
-        measures["local_training"] = Dict()
+        info("Training local models")        
+        
+            #if (!haskey(measures,"local_training")) 
+                measures["local_training"] = Dict()
+            #end            
         @async for (idx, pid) in enumerate(workers())
             # Naelson: START Local Training Time!!!!!
+
+            
             tic()           
             remotecall_fetch(train_local_model, pid)                      
-            # Naelson: STOP Local Training Time!!!!!
-            
-            exectime = toc()            
-            measures["local_training"][(idx,pid)] = exectime
+            # Naelson: STOP Local Training Time!!!!!         
+            measures["local_training"][(idx,pid)] = toc()
         end
         savemeasures()
 
@@ -240,11 +243,14 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         # Naelson: START Calculate Neighborhood (Clustering) Time!!!!!
         
         measures["clustering"] = Dict()
-        tic()
+        tic() #TAG clustering part1
         #neighborhoods = create_neighborhoods(nodes_histograms)
         neighborhoods = create_neighborhoods_stats_kmeans(nodes_stats)
         #TODO put the previous line out of the block
+        measures["clustering"] = Dict(1=>toc())
     end
+
+    tic() #TAG clustering part2
 
     info("Done training local models")
     info("Done calculating neighborhoods")
@@ -265,7 +271,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Done generating neighborhoods for every node")
     # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
-    measures["clustering"] = Dict(1=>toc())
+    measures["clustering"][1] = measures["clustering"][1] + toc() 
 
 
 
@@ -280,7 +286,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         end
     end
     # Naelson: STOP Train Global Model Time!!!!!
-    measures["clustering"] = Dict(1=>toc())
+    measures["global_model"] = Dict(1=>toc())
 
 
 
