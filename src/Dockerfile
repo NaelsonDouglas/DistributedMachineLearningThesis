@@ -4,7 +4,7 @@ MAINTAINER Naelson Douglas
 
 RUN wget https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.4-linux-x86_64.tar.gz
 RUN tar -xvf julia*.tar.gz
-RUN rm julia.tar
+RUN rm julia*.tar.gz
 RUN mv julia* julia
 RUN mv julia ~/julia
 RUN export PATH=$PATH:~/julia/bin
