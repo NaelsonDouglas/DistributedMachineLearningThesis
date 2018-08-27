@@ -3,8 +3,14 @@ using Mocha
 using MultivariateStats
 using JLD
 using Logging
+using JSON
 include("datasets.jl")
 include("statistics.jl")
+
+measures = Dict{Any,Dict}()
+
+tic()
+toc()
 
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
@@ -14,6 +20,13 @@ include("statistics.jl")
 #  histograms: vector containing all the histograms of the nodes.
 #  Returns: vector where the i-th position is the cluster of the i-th node
 ###
+
+function savemeasures()
+    f = open("measurements/measurements.json","w+")
+    write(f,JSON.json(measures))
+    flush(f)
+    close(f)
+end
 
 function create_neighborhoods_stats(stats, tolerance=0.05)
     tolerance = 0.
@@ -166,41 +179,79 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     info("Generating datasets and calculating maximums and minimums")
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
-    @sync for (idx, pid) in enumerate(workers())
+    measures["maxmimtime"] = Dict()
+    @sync for (idx, pid) in enumerate(workers())       
         @async begin
+            tic()
             metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim)
             remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim)
-            # Naelson: START Maximum and Minimum Time Measure!!!!!
-            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)
+            # Naelson: START Maximum and Minimum Time Measure!!!!!                    
+            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)                        
+            #TODO use differente files to prevent concorrence among the threads                    
             # Naelson: STOP Maximum and Minimum Time Measure!!!!!
-        end
+            exectime = toc()
+            measures["maxmimtime"][(idx,pid)] = Dict(idx=>exectime)
+        end  
+        
     end
+    println("=======================")
+    println(measures)   
+    savemeasures()
+    println("=======================")
+    
+
     examples, attributes = metadata[1]
     info("We have $(string(attributes)) attributes and $(string(examples)) examples")
     info("Calculating global max and global min...")
 
     info("Calculating histograms...")
-    # Naelson: START Histogram Creation Share Time!!!!!
-
+    
+    
+    # Naelson: START Histogram Creation Share Time!!!!! 
+    tic()
+    measures["histogram"] = Dict()
     nodes_stats = Array{Any}(nofworkers)
     @sync for (idx, pid) in enumerate(workers())
         #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics)
         @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
-    end
+    end    
     # Naelson: STOP Histogram Creation Share Time!!!!!	
+    measures["histogram"]["time"] = Dict(1=>toc())
+    savemeasures()
+
+
+
+
     @sync begin
-        info("Training local models")
-        for (idx, pid) in enumerate(workers())
-            # Naelson: START Local Training Time!!!!!			
-            @async remotecall_fetch(train_local_model, pid)
-            # Naelson: STOP Local Training Time!!!!!
+        info("Training local models")        
+        
+            #if (!haskey(measures,"local_training")) 
+                measures["local_training"] = Dict()
+            #end            
+        @async for (idx, pid) in enumerate(workers())
+            # Naelson: START Local Training Time!!!!!
+
+            
+            tic()           
+            remotecall_fetch(train_local_model, pid)                      
+            # Naelson: STOP Local Training Time!!!!!         
+            measures["local_training"][(idx,pid)] = toc()
         end
+        savemeasures()
+
         info("Calculating neighborhoods...")
         # Naelson: START Calculate Neighborhood (Clustering) Time!!!!!
+        
+        measures["clustering"] = Dict()
+        tic() #TAG clustering part1
         #neighborhoods = create_neighborhoods(nodes_histograms)
         neighborhoods = create_neighborhoods_stats_kmeans(nodes_stats)
-
+        #TODO put the previous line out of the block
+        measures["clustering"] = Dict(1=>toc())
     end
+
+    tic() #TAG clustering part2
+
     info("Done training local models")
     info("Done calculating neighborhoods")
 
@@ -220,7 +271,13 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Done generating neighborhoods for every node")
     # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
+    measures["clustering"][1] = measures["clustering"][1] + toc() 
+
+
+
     # Naelson: START Train Global Model Time!!!!!
+    measures["global_model"] = Dict()
+    tic()
     nodes_global_models = Array{Any}(nofworkers)
     @sync begin
         info("Training global model")
@@ -229,7 +286,13 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         end
     end
     # Naelson: STOP Train Global Model Time!!!!!
+    measures["global_model"] = Dict(1=>toc())
+
+
+
     # Naelson: START Testing Model Time!!!!!
+    measures["train_global_model"] = Dict()
+    tic()
     info("Done training global model")
 
     nodes_outputdata = Array{Any}(nofworkers)
@@ -253,7 +316,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         push!(data_final, final_output(nodes_test_data_evaluated[idx], idx, nodes_global_models, nodes_neighbors, examples))
     end
     # Naelson: STOP Testing Model Time!!!!!
-    elapsed_time = toc()
+    measures["train_global_model"] = Dict(1 => toc())    
+    savemeasures()
 
     errors=[]
     for i in 1:nofworkers
@@ -302,6 +366,10 @@ end
 function execute_experiment()
     # params checking
     # params order N_LOCAL, N_EXAMPLES, FUNCION, SEED, N_CLUSTER, DIM
+    println("------------------------")
+    println(ARGS)
+    println("------------------------")
+    
     if length(ARGS) < 3
         error("You need to specify the number of procs to use or data examples per node!")
         quit()
