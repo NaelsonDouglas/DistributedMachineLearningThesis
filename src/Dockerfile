@@ -22,6 +22,7 @@ RUN ~/julia/bin/julia -e 'Pkg.add("HDF5")'
 RUN ~/julia/bin/julia -e 'Pkg.add("Mocha")'
 RUN ~/julia/bin/julia -e 'Pkg.add("DataFrames")'
 RUN ~/julia/bin/julia -e 'Pkg.add("Distances")'
+RUN ~/julia/bin/julia -e 'Pkg.add("Logging")'
 
 RUN ~/julia/bin/julia -e 'Pkg.pin("Mocha", v"0.3.1")'
 RUN ~/julia/bin/julia -e 'Pkg.pin("Clustering", v"0.7.0")'
