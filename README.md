@@ -1,4 +1,5 @@
 # Overview
+
 TODO
 
 For more information, read the paper [TODOaXivLink]().
@@ -16,7 +17,7 @@ Remark: GNU/Linux users may need to call `sudo` before `docker` command.
 
 >cd src/ 
 
-> docker build -t dmlt .
+> docker build --no-cache -t dmlt .
 
 ## Run the experiments
 
@@ -24,12 +25,16 @@ Remark: GNU/Linux users may need to call `sudo` before `docker` command.
 
 This will open a Bash session by using the `dmlt` Docker image:
 
-> sudo docker run -it dmlt
+> docker run -it dmlt 
+
+> cd DistributedMachineLearningThesis/src/
+
+> time ~/julia/bin/julia -L master_summary.jl -e "execute_experiment()" 2 100 f1 1234 4 2
 
 ### Test the prototype
 > cd DistributedMachineLearningThesis/src/
 
->julia -L master_summary.jl -e "execute_experiment()" 4 100 f1 1234 4 2
+>julia -L master_summary.jl -e "execute_experiment()" 4 100 f1 1234 4 2	
 
 ## Understand the parameters
 
