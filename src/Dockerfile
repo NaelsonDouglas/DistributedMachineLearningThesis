@@ -2,7 +2,7 @@ FROM julialang/julia:v0.4.7
 
 MAINTAINER Naelson Douglas
 
-RUN wget https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.4-linux-x86_64.tar.gz
+RUN wget https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.2-linux-x86_64.tar.gz
 RUN tar -xvf julia*.tar.gz
 RUN rm julia*.tar.gz
 RUN mv julia* julia
@@ -29,3 +29,5 @@ RUN ~/julia/bin/julia -e 'Pkg.pin("Clustering", v"0.7.0")'
 RUN ~/julia/bin/julia -e 'Pkg.pin("MultivariateStats", v"0.3.0")'
 RUN ~/julia/bin/julia -e 'Pkg.pin("Debug", v"0.1.5")'
 RUN ~/julia/bin/julia -e 'Pkg.pin("Distributions", v"0.11.0")'
+
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/julia/bin/"
