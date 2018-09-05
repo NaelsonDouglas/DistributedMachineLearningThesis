@@ -29,7 +29,7 @@ This will open a Bash session by using the `dmlt` Docker image:
 
 > cd DistributedMachineLearningThesis/src/
 
-> time ~/julia/bin/julia -L master_summary.jl -e "execute_experiment()" 2 100 f1 1234 4 2
+> time ~/julia/bin/julia -L master_summary.jl -e "execute_experiment()" 8 100 f1 1234 4 2
 
 ### Test the prototype
 > cd DistributedMachineLearningThesis/src/
