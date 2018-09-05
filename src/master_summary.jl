@@ -3,29 +3,22 @@ using Mocha
 using MultivariateStats
 using JLD
 using Logging
-using JSON
 include("datasets.jl")
 include("statistics.jl")
 
-measures = Dict{Any,Dict}()
-
-tic()
-toc()
-
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
-#  This function doesn't need to be run on every node because the master has all
+#  This function doesn't need to be run on every node because the master has all
 #  the information to calculate de neighborhoods.
 #
 #  histograms: vector containing all the histograms of the nodes.
 #  Returns: vector where the i-th position is the cluster of the i-th node
 ###
 
-function savemeasures()
-    f = open("measurements/measurements.json","w+")
-    write(f,JSON.json(measures))
-    flush(f)
-    close(f)
+try
+    mkdir("./measurements/executing")
+catch
+    mv("./measurements/executing", string("./measurements/incomplete_test_",randstring()))
 end
 
 function create_neighborhoods_stats(stats, tolerance=0.05)
@@ -107,7 +100,7 @@ function create_neighborhoods(histograms)
         for j in i:nodes
             # calculate distance between node i and j only if their are different
             if i != j
-                # TODO: we are only using the euclidean distance...
+                # TODO: we are only using the euclidean distance...
                 distances[j,i] = calculate_distances(histograms[i], histograms[j])[2]
             end
         end
@@ -179,78 +172,60 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     info("Generating datasets and calculating maximums and minimums")
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
-    measures["maxmimtime"] = Dict()
-    @sync for (idx, pid) in enumerate(workers())       
+
+
+    @sync for (idx, pid) in enumerate(workers())
         @async begin
-            tic()
             metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim)
             remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim)
-            # Naelson: START Maximum and Minimum Time Measure!!!!!                    
-            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)                        
-            #TODO use differente files to prevent concorrence among the threads                    
-            # Naelson: STOP Maximum and Minimum Time Measure!!!!!
-            exectime = toc()
-            measures["maxmimtime"][(idx,pid)] = Dict(idx=>exectime)
-        end  
-        
-    end
-    println("=======================")
-    println(measures)   
-    savemeasures()
-    println("=======================")
-    
+            # Naelson: START Maximum and Minimum Time Measure!!!!!
 
+            #DONE --- inside calculate_maxmin 
+            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)
+            # Naelson: STOP Maximum and Minimum Time Measure!!!!!
+        end
+    end
     examples, attributes = metadata[1]
     info("We have $(string(attributes)) attributes and $(string(examples)) examples")
     info("Calculating global max and global min...")
 
     info("Calculating histograms...")
-    
-    
-    # Naelson: START Histogram Creation Share Time!!!!! 
+    # Naelson: START Histogram Creation Share Time!!!!!
+
+
+    #Not a parallel function, easier to calculate
     tic()
-    measures["histogram"] = Dict()
     nodes_stats = Array{Any}(nofworkers)
     @sync for (idx, pid) in enumerate(workers())
         #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics)
         @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
-    end    
-    # Naelson: STOP Histogram Creation Share Time!!!!!	
-    measures["histogram"]["time"] = Dict(1=>toc())
-    savemeasures()
-
-
-
-
-    @sync begin
-        info("Training local models")        
-        
-            #if (!haskey(measures,"local_training")) 
-                measures["local_training"] = Dict()
-            #end            
-        @async for (idx, pid) in enumerate(workers())
-            # Naelson: START Local Training Time!!!!!
-
-            
-            tic()           
-            remotecall_fetch(train_local_model, pid)                      
-            # Naelson: STOP Local Training Time!!!!!         
-            measures["local_training"][(idx,pid)] = toc()
-        end
-        savemeasures()
-
-        info("Calculating neighborhoods...")
-        # Naelson: START Calculate Neighborhood (Clustering) Time!!!!!
-        
-        measures["clustering"] = Dict()
-        tic() #TAG clustering part1
-        #neighborhoods = create_neighborhoods(nodes_histograms)
-        neighborhoods = create_neighborhoods_stats_kmeans(nodes_stats)
-        #TODO put the previous line out of the block
-        measures["clustering"] = Dict(1=>toc())
     end
+    histogram_create_time = toc()
+    histogram_create_time = floor(histogram_create_time,2)
+    
+    f=open("./measurements/executing/histogram_create_time.csv","w+")
+    write(f,string(myid(),",",histogram_create_time)) #The return of myid() is expected to be always 1 since this line is executed on the master
+    flush(f)
+    close(f)
+    #DONE
+    # Naelson: STOP Histogram Creation Share Time!!!!!  
+    @sync begin
+        info("Training local models")
+        for (idx, pid) in enumerate(workers())
+            # Naelson: START Local Training Time!!!!!           
+            @async remotecall_fetch(train_local_model, pid)
+            # Naelson: STOP Local Training Time!!!!!
+        end
+        info("Calculating neighborhoods...")
 
-    tic() #TAG clustering part2
+
+        # Naelson: START Calculate Neighborhood (Clustering) Time!!!!!
+        #neighborhoods = create_neighborhoods(nodes_histograms)
+
+        tic()
+        neighborhoods = create_neighborhoods_stats_kmeans(nodes_stats)
+
+    end
 
     info("Done training local models")
     info("Done calculating neighborhoods")
@@ -271,13 +246,17 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Done generating neighborhoods for every node")
     # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
-    measures["clustering"][1] = measures["clustering"][1] + toc() 
-
+    clustering_time = toc()
+    clustering_time = floor(clustering_time,2)
+    f = open("measurements/clustering_time.csv","a+")
+    write(f,string(myid(),",",clustering_time))
+    flush(f)
+    close(f)
 
 
     # Naelson: START Train Global Model Time!!!!!
-    measures["global_model"] = Dict()
-    tic()
+    #Done inside the train_global_model function. It is recording individually the time in each worker.
+    #IF you want to grab the total time (as seen by the master), you might only  get the roof value of the worrkers execution times
     nodes_global_models = Array{Any}(nofworkers)
     @sync begin
         info("Training global model")
@@ -285,13 +264,11 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
             @async nodes_global_models[idx] = remotecall_fetch(train_global_model, pid, nodes_neighbors[idx])
         end
     end
+    #Done inside the function train_global_model
     # Naelson: STOP Train Global Model Time!!!!!
-    measures["global_model"] = Dict(1=>toc())
-
 
 
     # Naelson: START Testing Model Time!!!!!
-    measures["train_global_model"] = Dict()
     tic()
     info("Done training global model")
 
@@ -316,8 +293,15 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         push!(data_final, final_output(nodes_test_data_evaluated[idx], idx, nodes_global_models, nodes_neighbors, examples))
     end
     # Naelson: STOP Testing Model Time!!!!!
-    measures["train_global_model"] = Dict(1 => toc())    
-    savemeasures()
+    testing_model_time = toc()
+    testing_model_time = floor(testing_model_time,2)
+
+    f = open("measurements/testing_model_time.csv","a+")
+    write(f,string(myid(),",",elapsed_time))
+    flush(f)
+    close(f)
+
+    elapsed_time = toc()
 
     errors=[]
     for i in 1:nofworkers
@@ -335,25 +319,24 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     end
     println(errors3)
     
-    prefix=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)
-    archivo=prefix*"_MSE_summary.txt"
+    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_MSE_summary.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, join(map(x->string(x),errors),",")*"\n")
     end
-    archivo=prefix*"_MAPE_summary.txt"
+    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_MAPE_summary.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, join(map(x->string(x),errors2),",")*"\n")
     end
-    archivo=prefix*"_R2_summary.txt"
+    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_R2_summary.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, join(map(x->string(x),errors3),",")*"\n")
     end
-    archivo=prefix*"_time_summary.txt"
+    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_time_summary.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, string(elapsed_time)*"\n")
     end
     find_nodes = length(counts(neighborhoods))
-    archivo=prefix*"_node_summary.txt"
+    archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_node_summary.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, string(find_nodes == num_nodes)*"\n")
     end
@@ -366,16 +349,12 @@ end
 function execute_experiment()
     # params checking
     # params order N_LOCAL, N_EXAMPLES, FUNCION, SEED, N_CLUSTER, DIM
-    println("------------------------")
-    println(ARGS)
-    println("------------------------")
-    
     if length(ARGS) < 3
         error("You need to specify the number of procs to use or data examples per node!")
         quit()
     end
     #for x in ARGS
-    #   println(x)	
+    #   println(x)  
     #end
     # Saving position and distributions of nodes, this can be done separately
     seed = 1234
