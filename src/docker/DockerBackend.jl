@@ -1,5 +1,16 @@
+#= TODO list
+
+#* verify that Docker is installed
+#* check Internet conection and/or image availability
+#* verify OS (bash and UNIX)
+#* pull dml dockerhub image to enable full test
+#* docker login to pull further Dockerhub images
+
+=#
+
 listof_containers = []
 juliabin = "/opt/julia/bin/julia"
+#img="hello-world"
 img="hello-world"
 
 "Executes the command `docker pull $img`"
@@ -13,21 +24,20 @@ function pullimage()
 end
 
 "
-Run a container with the specified resources [memory (MB), cpus].
+Run a container with the specified `nofcpus` and memory limit in Bytes (`memlimit`).
 The defautl values for memory and CPU is 512MB and 1 core.
 Return the `container_id` or `-1 ` if not sucessful.
 "
-function run_container(res_requirements=[512,1])
-	temp_cont_filename = string(randstring(10)) #	temp_dir = mktempdir(pwd())
-	#It will be rand for a  while. The name will be changed after the container creation
-	memory = string("-m=",res_requirements[1],"MB")
-	cpus = string("--cpus=",res_requirements[2])
-	cmd = "docker run -itd $memory $cpus $img"
+function run_container(nofcpus=0, memlimit=512)
+	temp_cont_filename = string(randstring(10))
+	#cmd = "docker run -itd $memory $cpus $img"
+	cmd = "docker run -itd $img"
 
 	info("Running docker image $img")
 	temp_cont_filename_string = string(temp_cont_filename)
 	try
-		run(pipeline(`docker run -itd $memory $cpus $img`, temp_cont_filename_string))
+		#run(pipeline(`docker run -itd $memlimit $nofcpus $img`, temp_cont_filename_string))
+		run(pipeline(`docker run -itd $img`, temp_cont_filename_string))
 	catch
 		error("Container NOT deployed: could not execute: $cmd")
 		return -1
@@ -47,10 +57,7 @@ end
 Remove a Docker container by Docker container ID.
 This function froces a container to stop.
 Return `false` if not successful.
-Example:
-```julia
-rmcontainer("3c14525d994426c4a0cd1af6189f8bd40a034a70e3ad84d3a287181db18ce014")
-```
+Example: TODO
 "
 function rmcontainer(container_id::String)
 		filename = "docker_output.tmp"
@@ -120,7 +127,7 @@ function test_docker_backend()
 
 	rmcontainer("a") # should print an Error
 
-	global img = "dmlt"
+	global img = "dmlt" #TODO pull dml Dockerhub and build dmlt
 	cid = run_container()
 	println(run(`docker exec $cid ls`))
 	println(execute_code("-E \"println(sqrt(144));1+13\"",cid)) # buggy: should print the result
