@@ -119,6 +119,7 @@ end
     output = get_maxmin(input_data)
     
     exectime = toc()
+    exectime = floor(exectime,2)
     
     f = open(".")
     try

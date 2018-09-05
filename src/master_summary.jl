@@ -19,9 +19,15 @@ include("statistics.jl")
 start_time = string(Dates.now())
 
 try
-    mkdir("./measurements/executing")
+    mkpath("./measurements/executing/train_global_model")
+    mkpath("./measurements/executing/calculate_maxmin")
+    mkpath("./measurements/executing/train_local_model") 
 catch
     mv("./measurements/executing", string("./measurements/incomplete/",randstring() ))
+
+    mkpath("./measurements/executing/train_global_model")
+    mkpath("./measurements/executing/calculate_maxmin")
+    mkpath("./measurements/executing/train_local_model") 
 end
 
 function create_neighborhoods_stats(stats, tolerance=0.05)
@@ -362,6 +368,34 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     
 end
 
+
+
+
+function mergelogs(logsdir::String,measurements_path::String="./measurements/executing/")
+    logs = readdir(measurements_path*logsdir*"/")    
+        
+    logs = map(logs) do x
+        measurements_path*logsdir*"/"*x
+    end
+
+    f = open(measurements_path*logsdir*".csv","a+")
+
+    for l=1:length(logs)
+        
+        log_i = open(logs[l])
+        write(f,readlines(log_i))
+
+        if(l!=length(logs))
+            write(f,"\n")            
+        end
+    end
+
+    rm(measurements_path*logsdir;force=true,recursive=true)
+    info(measurements_path*logsdir*" deleted")
+    flush(f)
+    close(f)
+end
+
 function execute_experiment()
     # params checking
     # params order N_LOCAL, N_EXAMPLES, FUNCION, SEED, N_CLUSTER, DIM
@@ -392,6 +426,19 @@ function execute_experiment()
     else
         run(n_of_procs, n_of_examples, funcion)
     end
+
+    #Deals with the results logs
+    info("\n Merging temporary log files")
+    mergelogs("train_global_model")
+    mergelogs("calculate_maxmin")
+    mergelogs("train_local_model")
+
+    results_folder = "./measurements/"*Dates.format(Dates.now(), "yy-mm-dd-e-HH:MM:SS")
+
+    mv("./measurements/executing",results_folder)
+    info("Results moved into the folder: "*results_folder*"\n")
+
+
 end
 
 function final_output(secondleveldatatotal, site, globalmodels, neighborhoods, examples)
@@ -417,6 +464,10 @@ function final_output(secondleveldatatotal, site, globalmodels, neighborhoods, e
     salidafinal=salidafinal/length(vecin)
 
     return salidafinal
-
-
 end
+
+
+
+
+
+
