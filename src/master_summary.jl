@@ -15,10 +15,13 @@ include("statistics.jl")
 #  Returns: vector where the i-th position is the cluster of the i-th node
 ###
 
+#I'm putting it after the includes because if this is the first time you are executing the code, these includes will take too long to pre-compile and this time will be measured
+start_time = string(Dates.now())
+
 try
     mkdir("./measurements/executing")
 catch
-    mv("./measurements/executing", string("./measurements/incomplete_test_",randstring()))
+    mv("./measurements/executing", string("./measurements/incomplete/",randstring() ))
 end
 
 function create_neighborhoods_stats(stats, tolerance=0.05)
@@ -162,14 +165,14 @@ end
 function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     Logging.configure(level=INFO)
     tic()
-    info("Adding ", nofworkers, " workers...")
+    info("Adding ", nofworkers, " workers...\n")
     addprocs(nofworkers)
     workers
 
-    info("Including workers code and functions...")
+    info("Including workers code and functions...\n")
     include("workers.jl")
 
-    info("Generating datasets and calculating maximums and minimums")
+    info("Generating datasets and calculating maximums and minimums\n")
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
 
@@ -186,8 +189,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         end
     end
     examples, attributes = metadata[1]
-    info("We have $(string(attributes)) attributes and $(string(examples)) examples")
-    info("Calculating global max and global min...")
+    info("We have $(string(attributes)) attributes and $(string(examples)) examples\n")
+    info("Calculating global max and global min...\n")
 
     info("Calculating histograms...")
     # Naelson: START Histogram Creation Share Time!!!!!
@@ -209,28 +212,33 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     close(f)
     #DONE
     # Naelson: STOP Histogram Creation Share Time!!!!!  
+    create_neighborhoods_stats_kmeans_time = 0
     @sync begin
-        info("Training local models")
+        info("Training local models\n")
         for (idx, pid) in enumerate(workers())
             # Naelson: START Local Training Time!!!!!           
             @async remotecall_fetch(train_local_model, pid)
             # Naelson: STOP Local Training Time!!!!!
         end
-        info("Calculating neighborhoods...")
+        info("Calculating neighborhoods...\n")
 
 
         # Naelson: START Calculate Neighborhood (Clustering) Time!!!!!
         #neighborhoods = create_neighborhoods(nodes_histograms)
+        #Done
 
         tic()
         neighborhoods = create_neighborhoods_stats_kmeans(nodes_stats)
+        create_neighborhoods_stats_kmeans_time = toc()
 
     end
 
+
+    tic()
     info("Done training local models")
     info("Done calculating neighborhoods")
 
-    info("Generating neighborhoods for every node")
+    info("Generating neighborhoods for every node\n")
 
     nodes_neighbors = Array{Any}(nofworkers)
     for (idx, pid) in enumerate(workers())
@@ -246,9 +254,10 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Done generating neighborhoods for every node")
     # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
-    clustering_time = toc()
+    #Done
+    clustering_time = toc() + create_neighborhoods_stats_kmeans_time
     clustering_time = floor(clustering_time,2)
-    f = open("measurements/clustering_time.csv","a+")
+    f = open("measurements/executing/clustering_time.csv","a+")
     write(f,string(myid(),",",clustering_time))
     flush(f)
     close(f)
@@ -269,6 +278,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
 
     # Naelson: START Testing Model Time!!!!!
+    #Done
     tic()
     info("Done training global model")
 
@@ -296,12 +306,18 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     testing_model_time = toc()
     testing_model_time = floor(testing_model_time,2)
 
-    f = open("measurements/testing_model_time.csv","a+")
-    write(f,string(myid(),",",elapsed_time))
+    f = open("measurements/executing/testing_model_time.csv","a+")
+    write(f,string(myid(),",",testing_model_time))
     flush(f)
     close(f)
 
     elapsed_time = toc()
+    elapsed_time = floor(elapsed_time,2)
+
+    f = open("measurements/executing/elapsed_time.csv","a+")
+    write(f,string(myid(),",",elapsed_time))
+    flush(f)
+    close(f)
 
     errors=[]
     for i in 1:nofworkers
