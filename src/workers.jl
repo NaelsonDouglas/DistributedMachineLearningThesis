@@ -111,10 +111,28 @@ end
 #				    i attribute.
 ###
 @everywhere function calculate_maxmin()
+    tic()    
+
     id = string(myid())
     # load serialized data
     input_data = load("Data/data_"*id*"/input.jld", "dataset_input")
-    get_maxmin(input_data)
+    output = get_maxmin(input_data)
+    
+    exectime = toc()
+    
+    f = open(".")
+    try
+        f = open(string("./measurements/executing/calculate_maxmin/","temp_",id,".csv"),"a+")
+    catch        
+        mkpath("./measurements/executing/calculate_maxmin/")
+        f = open(string("./measurements/executing/calculate_maxmin/","temp_",id,".csv"),"a+")
+    end
+
+    write(f,string(id,",",exectime))
+    flush(f)
+    close(f)
+
+    return output
 end
 
 ###
@@ -162,6 +180,10 @@ end
 ###
 
 @everywhere function train_local_model()
+    
+
+
+    tic()
     id = string(myid())
     # load data from serialized
     datainput = load("Data/data_"*id*"/input.jld", "dataset_input")
@@ -242,7 +264,23 @@ end
     open(directorio*"/"*"neuronas.txt", "w") do f
         write(f, "$neurona\n")
     end
-    return "snapshots_"*id
+    output =  "snapshots_"*id
+
+    exectime = toc()
+    exectime = floor(exectime,2)
+    f = open(".")
+    try
+        f = open(string("./measurements/executing/train_local_model/","temp_",id,".csv"),"a+")
+    catch        
+        mkpath("./measurements/executing/train_local_model/")
+        f = open(string("./measurements/executing/train_local_model/","temp_",id,".csv"),"a+")
+    end
+
+    write(f,string(id,",",exectime))
+    flush(f)
+    close(f)
+
+    return output
 end
 
 ###
@@ -253,6 +291,9 @@ end
 #  Returns: a ridge regression model trained
 ###
 @everywhere function train_global_model(neighborhood)
+
+    tic()
+
     id = string(myid())
     println("MY ID: ",id)
     # load data from serialized
@@ -309,6 +350,21 @@ end
     #shutdown(backend)
 
     model = ridge(secondleveldata, datalabels, 10)
+
+    exectime = toc()
+    exectime = floor(exectime,2)
+
+    f = open(".")
+    try
+        f = open(string("./measurements/executing/train_global_model/","temp_",id,".csv"),"a+")
+    catch        
+        mkpath("./measurements/executing/train_global_model/")
+        f = open(string("./measurements/executing/train_global_model/","temp_",id,".csv"),"a+")
+    end
+
+    write(f,string(id,",",exectime))
+    flush(f)
+    close(f)
 
     return model
 end
