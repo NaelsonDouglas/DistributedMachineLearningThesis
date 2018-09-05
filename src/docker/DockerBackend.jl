@@ -127,5 +127,3 @@ function test_docker_backend()
 	rmcontainer(cid)
 
 end
-
-test_docker_backend()
