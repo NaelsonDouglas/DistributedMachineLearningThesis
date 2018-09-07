@@ -1,7 +1,6 @@
 # Overview
 
-This repository has the reproducible material for running the experiments of the TODO paper [TODOaXivLink]().
-
+This repository has the reproducible material for running the experiments of the TODO paper [TODOpaperLink]().
 
 ## Requirements 
 * Linux or MacOS operating system
@@ -25,12 +24,16 @@ Remark: GNU/Linux users may need to call `sudo` before `docker` command.
 
 ### Create an interactive Docker container
 
-This will open a Bash session by using the just-created `dmlt` Docker image:
+First, let's set the `DOCKERBIN` variable according to your OS:
 
->export CID=$(docker run -tid \
->	-v /var/run/docker.sock:/var/run/docker.sock \
->	-v $(dockerbin):/usr/bin/docker \
->	dmlt) && docker exec -ti $CID /bin/bash
+>DOCKERBIN="/usr/bin/docker" # Linux users
+>DOCKERBIN="/usr/local/bin/docker" # MacOS users
+
+The folloeing command will create a container and run a Bash session on it by using the `dmlt` Docker image:
+
+>export CID=$(docker run -tid -v /var/run/docker.sock:/var/run/docker.sock -v $DOCKERBIN:/usr/bin/docker dmlt) && docker exec -ti $CID /bin/bash
+
+The `-v` parameters are necessary to allow the prototype to create further containers from the just-created container. 
 
 DOING...
 
