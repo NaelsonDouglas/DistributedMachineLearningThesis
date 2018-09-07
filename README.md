@@ -1,29 +1,38 @@
 # Overview
 
-TODO
+This repository has the reproducible material for running the experiments of the TODO paper [TODOaXivLink]().
 
-For more information, read the paper [TODOaXivLink]().
-
-# Running the experiments
 
 ## Requirements 
-### [Docker](https://www.docker.com/products/docker-desktop)
-### Code and data:
+* Linux or MacOS operating system
+* [Docker](https://www.docker.com/products/docker-desktop)
+* Code and data:
 
 >git clone https://github.com/NaelsonDouglas/DistributedMachineLearningThesis.git
 
-### Build the Docker image
+# Running the experiments
+
+## Build the Docker image
+
+After cloning this repository, execute the following commands.
+
 Remark: GNU/Linux users may need to call `sudo` before `docker` command.
 
 >cd src/ 
 
 > docker build --no-cache -t dmlt .
 
-## Run the experiments
 
 ### Create an interactive Docker container
 
-This will open a Bash session by using the `dmlt` Docker image:
+This will open a Bash session by using the just-created `dmlt` Docker image:
+
+>export CID=$(docker run -tid \
+>	-v /var/run/docker.sock:/var/run/docker.sock \
+>	-v $(dockerbin):/usr/bin/docker \
+>	dmlt) && docker exec -ti $CID /bin/bash
+
+DOING...
 
 > docker run -it dmlt 
 

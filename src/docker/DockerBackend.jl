@@ -2,7 +2,6 @@
 
 #* verify that Docker is installed
 #* check Internet conection and/or image availability
-#* verify OS (bash and UNIX)
 #* pull dml dockerhub image to enable full test
 #* docker login to pull further Dockerhub images
 

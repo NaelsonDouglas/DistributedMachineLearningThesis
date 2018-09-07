@@ -8,41 +8,34 @@ RUN tar -xvf julia*.tar.gz
 RUN rm julia*.tar.gz
 RUN mv julia* julia
 RUN mv julia ~/julia
-RUN export PATH=$PATH:~/julia/bin
+RUN export PATH=$PATH:/root/julia/bin
 
 RUN apt-get install -y cmake
 RUN apt-get install -y hdf5-tools
 
-# shhd 
 RUN apt update
-RUN apt-get install -y openssh-server
-RUN apt install -y openssh-server vim
-RUN mkdir /var/run/sshd
-RUN echo 'root:root' |chpasswd
-RUN sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
-EXPOSE 22
-CMD    ["/usr/sbin/sshd", "-D"]
+RUN apt-get install -y docker.io
 
-# DML stuff
-RUN git clone https://github.com/NaelsonDouglas/DistributedMachineLearningThesis.git
+# #
+# # DML stuff
+# #
+# RUN git clone https://github.com/NaelsonDouglas/DistributedMachineLearningThesis.git
+# # adding packages
+# RUN ~/julia/bin/julia -e 'Pkg.add("Clustering")'
+# RUN ~/julia/bin/julia -e 'Pkg.add("Distributions")'
+# RUN ~/julia/bin/julia -e 'Pkg.add("MultivariateStats")'
+# RUN ~/julia/bin/julia -e 'Pkg.add("Debug")'
+# #RUN ~/julia/bin/julia -e 'Pkg.add("HDF5")'
+# RUN ~/julia/bin/julia -e 'Pkg.add("Mocha")'
+# RUN ~/julia/bin/julia -e 'Pkg.add("DataFrames")'
+# RUN ~/julia/bin/julia -e 'Pkg.add("Distances")'
+# RUN ~/julia/bin/julia -e 'Pkg.add("Logging")'
+# # pinning packages
+# RUN ~/julia/bin/julia -e 'Pkg.pin("Mocha", v"0.3.1")'
+# RUN ~/julia/bin/julia -e 'Pkg.pin("Clustering", v"0.7.0")'
+# RUN ~/julia/bin/julia -e 'Pkg.pin("MultivariateStats", v"0.3.0")'
+# RUN ~/julia/bin/julia -e 'Pkg.pin("Debug", v"0.1.5")'
+# RUN ~/julia/bin/julia -e 'Pkg.pin("Distributions", v"0.15.0")'
+#TODO Pkg.clone("https://github.com/ararslan/OperatingSystems.jl.git")
 
-RUN ~/julia/bin/julia -e 'Pkg.add("Clustering")'
-RUN ~/julia/bin/julia -e 'Pkg.add("Distributions")'
-RUN ~/julia/bin/julia -e 'Pkg.add("MultivariateStats")'
-RUN ~/julia/bin/julia -e 'Pkg.add("Debug")'
-RUN ~/julia/bin/julia -e 'Pkg.add("HDF5")'
-RUN ~/julia/bin/julia -e 'Pkg.add("Mocha")'
-RUN ~/julia/bin/julia -e 'Pkg.add("DataFrames")'
-RUN ~/julia/bin/julia -e 'Pkg.add("Distances")'
-RUN ~/julia/bin/julia -e 'Pkg.add("Logging")'
-
-RUN ~/julia/bin/julia -e 'Pkg.pin("Mocha", v"0.3.1")'
-RUN ~/julia/bin/julia -e 'Pkg.pin("Clustering", v"0.7.0")'
-RUN ~/julia/bin/julia -e 'Pkg.pin("MultivariateStats", v"0.3.0")'
-RUN ~/julia/bin/julia -e 'Pkg.pin("Debug", v"0.1.5")'
-RUN ~/julia/bin/julia -e 'Pkg.pin("Distributions", v"0.15.0")'
-
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/julia/bin/"
-
-RUN echo "JULIA VERSION = $(julia -v)"
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/root/julia/bin/"
