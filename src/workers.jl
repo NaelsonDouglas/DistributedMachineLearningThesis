@@ -123,10 +123,10 @@ end
     
     f = open(".")
     try
-        f = open(string("./measurements/executing/calculate_maxmin/","temp_",id,".csv"),"a+")
+        f = open(string("./results/executing/calculate_maxmin/","temp_",id,".csv"),"a+")
     catch        
-        mkpath("./measurements/executing/calculate_maxmin/")
-        f = open(string("./measurements/executing/calculate_maxmin/","temp_",id,".csv"),"a+")
+        mkpath("./results/executing/calculate_maxmin/")
+        f = open(string("./results/executing/calculate_maxmin/","temp_",id,".csv"),"a+")
     end
 
     write(f,string(id,",",exectime))
@@ -271,13 +271,13 @@ end
     exectime = floor(exectime,2)
     f = open(".")
     try
-        f = open(string("./measurements/executing/train_local_model/","temp_",id,".csv"),"a+")
+        f = open(string("./results/executing/train_local_model/","temp_",id,".csv"),"a+")
     catch        
-        mkpath("./measurements/executing/train_local_model/")
-        f = open(string("./measurements/executing/train_local_model/","temp_",id,".csv"),"a+")
+        mkpath("./results/executing/train_local_model/")
+        f = open(string("./results/executing/train_local_model/","temp_",id,".csv"),"a+")
     end
 
-    write(f,string(id,",",exectime))
+    write(f,string(exectime))
     flush(f)
     close(f)
 
@@ -357,13 +357,13 @@ end
 
     f = open(".")
     try
-        f = open(string("./measurements/executing/train_global_model/","temp_",id,".csv"),"a+")
+        f = open(string("./results/executing/train_global_model/","temp_",id,".csv"),"a+")
     catch        
-        mkpath("./measurements/executing/train_global_model/")
-        f = open(string("./measurements/executing/train_global_model/","temp_",id,".csv"),"a+")
+        mkpath("./results/executing/train_global_model/")
+        f = open(string("./results/executing/train_global_model/","temp_",id,".csv"),"a+")
     end
 
-    write(f,string(id,",",exectime))
+    write(f,string(exectime))
     flush(f)
     close(f)
 
