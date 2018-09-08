@@ -3,6 +3,8 @@ using Mocha
 using MultivariateStats
 using JLD
 using Logging
+using CSV
+using DataFrames
 include("datasets.jl")
 include("statistics.jl")
 ###
@@ -448,11 +450,29 @@ function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
         end                
     end
 
-    #rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
+    rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
     info(EXECUTING_PATH*logsdir*" deleted")
     flush(f)
     close(f)
     
+end
+
+function generatetable(resultsdir::String)
+    logs = readdir("./results/"*resultsdir)
+        
+    logs = map(logs) do x
+        "./results/"*resultsdir*"/"*x
+    end
+    table = DataFrame()
+    for l in logs
+        currenttable = CSV.read(l)
+        rm(l)
+        table = hcat(table,currenttable)
+    end
+    output = "./results/"*resultsdir*"/system.csv"
+    touch(output)
+    CSV.write(output,table)
+    return table
 end
 
 function execute_experiment()
@@ -484,14 +504,8 @@ function execute_experiment()
         end
     else
         run(n_of_procs, n_of_examples, funcion)
-    end
-
-    #Deals with the results logs
+    end 
     
-    
-    
-    
-
     commit = readstring(`git log --pretty=format:'%h' -n 1`)
     results_folder = "./results/"*commit*"-"*start_time*"-"
 
