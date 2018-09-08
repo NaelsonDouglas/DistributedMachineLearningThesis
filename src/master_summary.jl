@@ -186,7 +186,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
 
-
+    n_of_procs = parse(ARGS[1])
     tic()
     @sync for (idx, pid) in enumerate(workers())
         @async begin
@@ -201,10 +201,9 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     end
     master_maxmim_time = toc()    
     master_maxmim_time = floor(master_maxmim_time,2)
-    f = open(string(EXECUTING_PATH*"calculate_maxmin/","temp_",myid(),".csv"),"a+")
-    write(f,string(master_maxmim_time))
-    flush(f)
-    close(f)
+
+    store_masterlog(master_maxmim_time, string("calculate_maxmin/","temp_",myid()),"calculate_maxmin")
+    
 
 
 
@@ -226,12 +225,9 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
     end
     histogram_create_time = toc()
-    histogram_create_time = floor(histogram_create_time,2)
-    
-    f=open(EXECUTING_PATH*"histogram_create_time.csv","a+")
-    write(f,string(histogram_create_time)) #The return of myid() is expected to be always 1 since this line is executed on the master
-    flush(f)
-    close(f)
+    histogram_create_time = floor(histogram_create_time,2)    
+    store_masterlog(histogram_create_time, "histogram_create_time","create_histogram",nofworkers)
+
     #DONE
     # Naelson: STOP Histogram Creation Share Time!!!!!  
     create_neighborhoods_stats_kmeans_time = 0
@@ -262,11 +258,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     local_training_time = toc()
     local_training_time = floor(local_training_time,2)
-    f = open(string(EXECUTING_PATH*"train_local_model/","temp_",myid(),".csv"),"a+")
-    write(f,string(local_training_time))
-    flush(f)
-    close(f)
-
+    store_masterlog(local_training_time, string("train_local_model/","temp_",myid()),"local_training")
 
     tic()
     info("Done training local models")
@@ -292,10 +284,9 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     #Done
     clustering_time = toc() + create_neighborhoods_stats_kmeans_time
     clustering_time = floor(clustering_time,2)
-    f = open(EXECUTING_PATH*"clustering_time.csv","a+")
-    write(f,string(clustering_time))
-    flush(f)
-    close(f)
+    
+    store_masterlog(clustering_time,"clustering_time","clustering_time",nofworkers)
+    
 
 
     # Naelson: START Train Global Model Time!!!!!
@@ -317,10 +308,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     #Done
     train_global_model_time = toc()
     train_global_model_time = floor(train_global_model_time ,2)
-    f = open(EXECUTING_PATH*"train_global_model/temp_1.csv","a+")
-    write(f,string(train_global_model_time))
-    flush(f)
-    close(f)
+    store_masterlog(train_global_model_time,"train_global_model","train_global_model")
+    
     info("Done training global model")
     tic()
     
@@ -348,11 +337,9 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     # Naelson: STOP Testing Model Time!!!!!
     testing_model_time = toc()
     testing_model_time = floor(testing_model_time,2)
+    store_masterlog(testing_model_time,"testing_model_time","testing_model",nofworkers)
 
-    f = open(EXECUTING_PATH*"testing_model_time.csv","a+")
-    write(f,string(testing_model_time))
-    flush(f)
-    close(f)
+    
 
    elapsed_time = 150 #TODO CALCULAR ISSO ---- O MOCHA USA ESSA VARIÁVEL, POR ISSO ESTOU HARDCODANDO 
    
@@ -402,6 +389,33 @@ end
 
 
 
+function store_masterlog(time, file::String,header,n_workers=0)
+    putheader(file,header)
+
+    f = open(EXECUTING_PATH*file*".csv","a+")       
+    write(f,string(time))  
+
+    if n_workers > 0
+        write(f,"\n")
+        for i=1:n_workers
+            write(f,"0")
+            if i!=n_workers
+                write(f,"\n")
+            end
+        end
+    end
+    flush(f)
+    close(f)
+end
+
+function putheader(csv::String, header::String)
+    f = open(EXECUTING_PATH*csv*".csv","a+")
+    write(f,header*"\n")
+    flush(f)
+    close(f)
+end
+
+
 
 function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
     logs = readdir(EXECUTING_PATH*logsdir*"/")    
@@ -412,25 +426,26 @@ function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
 
     f = open(EXECUTING_PATH*logsdir*".csv","a+")
 
-    data = Vector{Int}()
-    for l=1:length(logs)
-        
-        push!(data,l)
+    
+    
+    for l=1:length(logs)      
 
         log_i = open(logs[l])
-        write(f,readlines(log_i))
-
-        if(l!=length(logs))
-            write(f,"\n")            
-        end
+        lines = readlines(log_i)
+        foreach(lines) do x
+            
+            write(f,x)
+            if l!=length(logs)
+                write(f,"\n")
+            end
+        end                
     end
 
-    rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
+    #rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
     info(EXECUTING_PATH*logsdir*" deleted")
     flush(f)
     close(f)
-
-    return data
+    
 end
 
 function execute_experiment()

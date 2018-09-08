@@ -129,7 +129,7 @@ end
         f = open(string("./results/executing/calculate_maxmin/","temp_",id,".csv"),"a+")
     end
 
-    write(f,string(id,",",exectime))
+    write(f,string(exectime))
     flush(f)
     close(f)
 
