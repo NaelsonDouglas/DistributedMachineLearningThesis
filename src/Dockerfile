@@ -10,12 +10,31 @@ RUN mv julia* julia
 RUN mv julia ~/julia
 RUN export PATH=$PATH:/root/julia/bin
 
-RUN apt-get install -y cmake
+RUN apt-get install -y cmake 
 RUN apt-get install -y hdf5-tools
 
+# Docker
 RUN apt update
 RUN apt-get install -y docker.io
 
+# sshd 
+ RUN apt-get install -y openssh-server
+ RUN mkdir /var/run/sshd \
+	 && echo 'AuthorizedKeysFile %h/.ssh/authorized_keys' >> /etc/ssh/sshd_config \
+     && sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd \
+     && sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config \
+     && sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config \
+	 && echo 'root:root' |chpasswd
+ EXPOSE 22
+ CMD    ["/usr/sbin/sshd", "-D"]
+ # SSH key
+RUN ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -q -N ""
+#RUN mkdir -p $HOME/.ssh \
+#	&& chmod 700 $HOME/.ssh \
+RUN cat $HOME/.ssh/id_rsa.pub > $HOME/.ssh/authorized_keys \
+	&& chmod 600 $HOME/.ssh/authorized_keys 
+
+#TODO uncomment the first comment column
 # #
 # # DML stuff
 # #

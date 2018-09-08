@@ -5,32 +5,38 @@ that works for local Docker installation.
 In a nutshell, it creates a Docker container and deloys a Julia worker on it.
 =#
 include("DockerBackend.jl")
-img="dmlt"
+
 
 "TODO"
-#function add_dockerworker(nofworkers::Int, nofcpus=0, mem=512; tunnel=false)
+#function add_dockerworker(nosfworkers::Int, nofcpus=0, mem=512; tunnel=false)
 nofworkers=1; nofcpus=0; mem=512; tunnel=false;
 
+dockerrm_all()
 # Deploy Docker container
-cid = run_container()
+@show cid = dockerrun()
+@show cid2 = dockerrun()
+@show ip = get_containerip(cid)
+@show ip2 = get_containerip(cid2)
 
-1) run container detached (-d)
+if sshup(cid) && sshup(cid2)
+	println("all SSHD up!")
+end
 
-2) enable container run containers
+ssh -o "StrictHostKeyChecking no" localhost
 
+#TODO create SSH keys at host and containers
+ssh_key=homedir()*"/.ssh/id_rsa"
+ssh_pubkey=homedir()*"/.ssh/id_rsa.pub"
 
+pid = addprocs(
+    #["$ip"];
+	["172.17.0.3"];
+    #tunnel=true,
+    sshflags=`-i /root/.ssh/id_rsa -o "StrictHostKeyChecking no"`,
+	#sshflags=`-i $ssh_key`,
+    dir="/root/julia/bin",
+    exename="/root/julia/bin/julia")
 
-3) test it and configure it if necessary
-
-https://forums.docker.com/t/how-can-i-run-docker-command-inside-a-docker-container/337/8
-
-
-4) addprocs
-
-pid = addprocs(["root@$(SETTINGS.host)"];
-tunnel=true,
-sshflags=`-i $ssh_key -p $get_port()`,dir="/opt/julia/bin",exename="/opt/julia/bin/julia")
-/opt/julia/bin/julia
 
 
 #end
