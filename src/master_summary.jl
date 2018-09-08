@@ -441,7 +441,7 @@ function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
         end                
     end
 
-    #rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
+    rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
     info(EXECUTING_PATH*logsdir*" deleted")
     flush(f)
     close(f)
