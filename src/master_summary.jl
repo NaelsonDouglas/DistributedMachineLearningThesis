@@ -5,7 +5,6 @@ using JLD
 using Logging
 include("datasets.jl")
 include("statistics.jl")
-
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
 #  This function doesn't need to be run on every node because the master has all
@@ -203,6 +202,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     master_maxmim_time = floor(master_maxmim_time,2)
 
     store_masterlog(master_maxmim_time, string("calculate_maxmin/","temp_",myid()),"calculate_maxmin")
+    info("\n Merged maxmim logs")
+    mergelogs("calculate_maxmin")
     
 
 
@@ -259,6 +260,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     local_training_time = toc()
     local_training_time = floor(local_training_time,2)
     store_masterlog(local_training_time, string("train_local_model/","temp_",myid()),"local_training")
+    info("\n Merged train local model logs")        
+    mergelogs("train_local_model")
 
     tic()
     info("Done training local models")
@@ -308,11 +311,14 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     #Done
     train_global_model_time = toc()
     train_global_model_time = floor(train_global_model_time ,2)
-    store_masterlog(train_global_model_time,"train_global_model","train_global_model")
     
+    store_masterlog(train_global_model_time,string("train_global_model/","temp_",myid(),".csv"),"train_global_model")
+    info("\n Merged train global model logs")    
+    mergelogs("train_global_model")
+    
+
     info("Done training global model")
-    tic()
-    
+    tic()    
 
     nodes_outputdata = Array{Any}(nofworkers)
     @sync begin
@@ -428,20 +434,21 @@ function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
 
     
     
-    for l=1:length(logs)      
+    for log_index=1:length(logs)      
 
-        log_i = open(logs[l])
+        log_i = open(logs[log_index])
         lines = readlines(log_i)
-        foreach(lines) do x
-            
-            write(f,x)
-            if l!=length(logs)
+        
+        for l=1:length(lines)            
+            write(f,lines[l])
+            if log_index!=length(logs)
                 write(f,"\n")
             end
+
         end                
     end
 
-    rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
+    #rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
     info(EXECUTING_PATH*logsdir*" deleted")
     flush(f)
     close(f)
@@ -480,10 +487,10 @@ function execute_experiment()
     end
 
     #Deals with the results logs
-    info("\n Merging temporary log files")
-    mergelogs("train_global_model")
-    mergelogs("calculate_maxmin")
-    mergelogs("train_local_model")
+    
+    
+    
+    
 
     commit = readstring(`git log --pretty=format:'%h' -n 1`)
     results_folder = "./results/"*commit*"-"*start_time*"-"
