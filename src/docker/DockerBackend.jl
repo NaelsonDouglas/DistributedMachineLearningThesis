@@ -35,7 +35,7 @@ function dockerrun(img="dmlt", params="-tid", nofcpus=1, memlimit=2000)
 
 
 	cmd="docker run $params --cpus $nofcpus -m $memlimit $img"
-	info("Running docker command: $cmd")
+	#info("Running docker command: $cmd")
 	try
 		run(pipeline(`docker run $params --cpus $nofcpus -m $memlimit $img`, temp_cont_filename_string))
 	catch
@@ -132,6 +132,7 @@ function sshup(cid::String)
 		error("Could NOT `docker exec $cid /usr/sbin/sshd` to init SSHD.")
 		return false
 	end
+	info("SSH on container $cid is up")
 	return true
 end
 

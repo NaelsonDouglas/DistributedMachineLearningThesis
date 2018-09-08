@@ -6,36 +6,43 @@ In a nutshell, it creates a Docker container and deloys a Julia worker on it.
 =#
 include("DockerBackend.jl")
 
-
 "TODO"
-function add_dockerworker(nofworkers::Int, nofcpus=0, memlimit=512)
-	#TODO for i in 1:nofworkers
-
-	dockerrm_all()
-	# Deploy Docker container
-	@show cid = dockerrun()
-	@show cid2 = dockerrun()
-	@show ip = get_containerip(cid)
-	@show ip2 = get_containerip(cid2)
-
-	if sshup(cid) && sshup(cid2)
-		println("all SSHD up!")
-	end
+function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
+							nofcpus=1, memlimit=2000)
+	# nofworkers=1
+	# img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
 
 	ssh_key=homedir()*"/.ssh/id_rsa"
-	ssh_pubkey=homedir()*"/.ssh/id_rsa.pub"
+	juliabin = "/root/julia/bin/julia"
 
+	info("Deploying Docker $nofworkers container(s) and initialize their SSH daemon...")
+	for n in 1:nofworkers
+		cid = dockerrun(img,params,nofcpus,memlimit)
+		if ! sshup(cid)
+			error("Could NOT init SSH at container $cid. Exiting Julia...")
+			exit(1)
+		end
+	end
 
-	pids = addprocs(
-	    #["$ip"];
-		["172.17.0.3"];
-	    #tunnel=true,
-	    sshflags=`-i /root/.ssh/id_rsa -o "StrictHostKeyChecking no"`,
-		#sshflags=`-i $ssh_key`,
-	    dir="/root/julia/bin",
-	    exename="/root/julia/bin/julia")
+	info("Getting containers' IP addresses...")
+	ips = []
+	for cid in listof_containers
+		push!(ips, get_containerip(cid))
+	end
 
-		return pids
+	info("Creating $nofworkers Worker(s) through SSH...")
+	try
+		pids = addprocs(
+			[ips],
+			sshflags=`-i $ssh_key -o "StrictHostKeyChecking no"`,
+			exename="$juliabin")
+	catch
+		error("Could NOT create $nofworkers Worker(s)! \n
+			Worker(s)' IP addresses: $ips \n
+			Exiting Julia...")
+		exit(1)
+	end
+	return pids
 end
 
 "TODO"
