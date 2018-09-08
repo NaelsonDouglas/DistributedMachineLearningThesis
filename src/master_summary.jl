@@ -3,9 +3,10 @@ using Mocha
 using MultivariateStats
 using JLD
 using Logging
+using CSV
+using DataFrames
 include("datasets.jl")
 include("statistics.jl")
-
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
 #  This function doesn't need to be run on every node because the master has all
@@ -16,18 +17,22 @@ include("statistics.jl")
 ###
 
 #I'm putting it after the includes because if this is the first time you are executing the code, these includes will take too long to pre-compile and this time will be measured
-start_time = string(Dates.now())
+
+
+EXECUTING_PATH = "./results/executing/"
+start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
 
 try
-    mkpath("./measurements/executing/train_global_model")
-    mkpath("./measurements/executing/calculate_maxmin")
-    mkpath("./measurements/executing/train_local_model") 
-catch
-    mv("./measurements/executing", string("./measurements/incomplete/",randstring() ))
+    mkpath("./results/incomplete/")
+    mv(EXECUTING_PATH, string("./results/incomplete/",randstring() ))
 
-    mkpath("./measurements/executing/train_global_model")
-    mkpath("./measurements/executing/calculate_maxmin")
-    mkpath("./measurements/executing/train_local_model") 
+    mkpath(EXECUTING_PATH*"train_global_model")
+    mkpath(EXECUTING_PATH*"calculate_maxmin")
+    mkpath(EXECUTING_PATH*"train_local_model") 
+catch  
+    mkpath(EXECUTING_PATH*"train_global_model")
+    mkpath(EXECUTING_PATH*"calculate_maxmin")
+    mkpath(EXECUTING_PATH*"train_local_model") 
 end
 
 function create_neighborhoods_stats(stats, tolerance=0.05)
@@ -170,7 +175,7 @@ end
 
 function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     Logging.configure(level=INFO)
-    tic()
+    
     info("Adding ", nofworkers, " workers...\n")
     addprocs(nofworkers)
     workers
@@ -182,7 +187,8 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
 
-
+    n_of_procs = parse(ARGS[1])
+    tic()
     @sync for (idx, pid) in enumerate(workers())
         @async begin
             metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim)
@@ -194,6 +200,18 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
             # Naelson: STOP Maximum and Minimum Time Measure!!!!!
         end
     end
+    master_maxmim_time = toc()    
+    master_maxmim_time = floor(master_maxmim_time,2)
+
+    store_masterlog(master_maxmim_time, string("calculate_maxmin/","temp_",myid()),"calculate_maxmin")
+    info("\n Merged maxmim logs")
+    mergelogs("calculate_maxmin")
+    
+
+
+
+
+
     examples, attributes = metadata[1]
     info("We have $(string(attributes)) attributes and $(string(examples)) examples\n")
     info("Calculating global max and global min...\n")
@@ -202,7 +220,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     # Naelson: START Histogram Creation Share Time!!!!!
 
 
-    #Not a parallel function, easier to calculate
+    
     tic()
     nodes_stats = Array{Any}(nofworkers)
     @sync for (idx, pid) in enumerate(workers())
@@ -210,22 +228,24 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
     end
     histogram_create_time = toc()
-    histogram_create_time = floor(histogram_create_time,2)
-    
-    f=open("./measurements/executing/histogram_create_time.csv","w+")
-    write(f,string(myid(),",",histogram_create_time)) #The return of myid() is expected to be always 1 since this line is executed on the master
-    flush(f)
-    close(f)
+    histogram_create_time = floor(histogram_create_time,2)    
+    store_masterlog(histogram_create_time, "histogram_create_time","create_histogram",nofworkers)
+
     #DONE
     # Naelson: STOP Histogram Creation Share Time!!!!!  
     create_neighborhoods_stats_kmeans_time = 0
+    tic()
     @sync begin
         info("Training local models\n")
+
+        
         for (idx, pid) in enumerate(workers())
             # Naelson: START Local Training Time!!!!!           
             @async remotecall_fetch(train_local_model, pid)
             # Naelson: STOP Local Training Time!!!!!
         end
+        
+
         info("Calculating neighborhoods...\n")
 
 
@@ -239,6 +259,11 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     end
 
+    local_training_time = toc()
+    local_training_time = floor(local_training_time,2)
+    store_masterlog(local_training_time, string("train_local_model/","temp_",myid()),"local_training")
+    info("\n Merged train local model logs")        
+    mergelogs("train_local_model")
 
     tic()
     info("Done training local models")
@@ -257,21 +282,22 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     end
     print(nodes_neighbors)
     
+    # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
 
     info("Done generating neighborhoods for every node")
-    # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
+    
     #Done
     clustering_time = toc() + create_neighborhoods_stats_kmeans_time
     clustering_time = floor(clustering_time,2)
-    f = open("measurements/executing/clustering_time.csv","a+")
-    write(f,string(myid(),",",clustering_time))
-    flush(f)
-    close(f)
+    
+    store_masterlog(clustering_time,"clustering_time","clustering_time",nofworkers)
+    
 
 
     # Naelson: START Train Global Model Time!!!!!
     #Done inside the train_global_model function. It is recording individually the time in each worker.
     #IF you want to grab the total time (as seen by the master), you might only  get the roof value of the worrkers execution times
+    tic()
     nodes_global_models = Array{Any}(nofworkers)
     @sync begin
         info("Training global model")
@@ -285,8 +311,16 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     # Naelson: START Testing Model Time!!!!!
     #Done
-    tic()
+    train_global_model_time = toc()
+    train_global_model_time = floor(train_global_model_time ,2)
+    
+    store_masterlog(train_global_model_time,string("train_global_model/","temp_",myid(),".csv"),"train_global_model")
+    info("\n Merged train global model logs")    
+    mergelogs("train_global_model")
+    
+
     info("Done training global model")
+    tic()    
 
     nodes_outputdata = Array{Any}(nofworkers)
     @sync begin
@@ -311,19 +345,12 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     # Naelson: STOP Testing Model Time!!!!!
     testing_model_time = toc()
     testing_model_time = floor(testing_model_time,2)
+    store_masterlog(testing_model_time,"testing_model_time","testing_model",nofworkers)
 
-    f = open("measurements/executing/testing_model_time.csv","a+")
-    write(f,string(myid(),",",testing_model_time))
-    flush(f)
-    close(f)
+    
 
-    elapsed_time = toc()
-    elapsed_time = floor(elapsed_time,2)
-
-    f = open("measurements/executing/elapsed_time.csv","a+")
-    write(f,string(myid(),",",elapsed_time))
-    flush(f)
-    close(f)
+   elapsed_time = 150 #TODO CALCULAR ISSO ---- O MOCHA USA ESSA VARIÁVEL, POR ISSO ESTOU HARDCODANDO 
+   
 
     errors=[]
     for i in 1:nofworkers
@@ -370,30 +397,82 @@ end
 
 
 
+function store_masterlog(time, file::String,header,n_workers=0)
+    putheader(file,header)
 
-function mergelogs(logsdir::String,measurements_path::String="./measurements/executing/")
-    logs = readdir(measurements_path*logsdir*"/")    
-        
-    logs = map(logs) do x
-        measurements_path*logsdir*"/"*x
-    end
+    f = open(EXECUTING_PATH*file*".csv","a+")       
+    write(f,string(time))  
 
-    f = open(measurements_path*logsdir*".csv","a+")
-
-    for l=1:length(logs)
-        
-        log_i = open(logs[l])
-        write(f,readlines(log_i))
-
-        if(l!=length(logs))
-            write(f,"\n")            
+    if n_workers > 0
+        write(f,"\n")
+        for i=1:n_workers
+            write(f,"0")
+            if i!=n_workers
+                write(f,"\n")
+            end
         end
     end
-
-    rm(measurements_path*logsdir;force=true,recursive=true)
-    info(measurements_path*logsdir*" deleted")
     flush(f)
     close(f)
+end
+
+function putheader(csv::String, header::String)
+    f = open(EXECUTING_PATH*csv*".csv","a+")
+    write(f,header*"\n")
+    flush(f)
+    close(f)
+end
+
+
+
+function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
+    logs = readdir(EXECUTING_PATH*logsdir*"/")    
+        
+    logs = map(logs) do x
+        EXECUTING_PATH*logsdir*"/"*x
+    end
+
+    f = open(EXECUTING_PATH*logsdir*".csv","a+")
+
+    
+    
+    for log_index=1:length(logs)      
+
+        log_i = open(logs[log_index])
+        lines = readlines(log_i)
+        
+        for l=1:length(lines)            
+            write(f,lines[l])
+            if log_index!=length(logs)
+                write(f,"\n")
+            end
+
+        end                
+    end
+
+    rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
+    info(EXECUTING_PATH*logsdir*" deleted")
+    flush(f)
+    close(f)
+    
+end
+
+function generatetable(resultsdir::String)
+    logs = readdir("./results/"*resultsdir)
+        
+    logs = map(logs) do x
+        "./results/"*resultsdir*"/"*x
+    end
+    table = DataFrame()
+    for l in logs
+        currenttable = CSV.read(l)
+        rm(l)
+        table = hcat(table,currenttable)
+    end
+    output = "./results/"*resultsdir*"/system.csv"
+    touch(output)
+    CSV.write(output,table)
+    return table
 end
 
 function execute_experiment()
@@ -425,17 +504,13 @@ function execute_experiment()
         end
     else
         run(n_of_procs, n_of_examples, funcion)
-    end
+    end 
+    
+    commit = readstring(`git log --pretty=format:'%h' -n 1`)
+    results_folder = "./results/"*commit*"-"*start_time*"-"
 
-    #Deals with the results logs
-    info("\n Merging temporary log files")
-    mergelogs("train_global_model")
-    mergelogs("calculate_maxmin")
-    mergelogs("train_local_model")
-
-    results_folder = "./measurements/"*Dates.format(Dates.now(), "yy-mm-dd-e-HH:MM:SS")
-
-    mv("./measurements/executing",results_folder)
+    
+    mv(EXECUTING_PATH,results_folder)
     info("Results moved into the folder: "*results_folder*"\n")
 
 
@@ -465,9 +540,3 @@ function final_output(secondleveldatatotal, site, globalmodels, neighborhoods, e
 
     return salidafinal
 end
-
-
-
-
-
-
