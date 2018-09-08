@@ -8,37 +8,57 @@ include("DockerBackend.jl")
 
 
 "TODO"
-#function add_dockerworker(nosfworkers::Int, nofcpus=0, mem=512; tunnel=false)
-nofworkers=1; nofcpus=0; mem=512; tunnel=false;
+function add_dockerworker(nofworkers::Int, nofcpus=0, memlimit=512)
+	#TODO for i in 1:nofworkers
 
-dockerrm_all()
-# Deploy Docker container
-@show cid = dockerrun()
-@show cid2 = dockerrun()
-@show ip = get_containerip(cid)
-@show ip2 = get_containerip(cid2)
+	dockerrm_all()
+	# Deploy Docker container
+	@show cid = dockerrun()
+	@show cid2 = dockerrun()
+	@show ip = get_containerip(cid)
+	@show ip2 = get_containerip(cid2)
 
-if sshup(cid) && sshup(cid2)
-	println("all SSHD up!")
+	if sshup(cid) && sshup(cid2)
+		println("all SSHD up!")
+	end
+
+	ssh_key=homedir()*"/.ssh/id_rsa"
+	ssh_pubkey=homedir()*"/.ssh/id_rsa.pub"
+
+
+	pids = addprocs(
+	    #["$ip"];
+		["172.17.0.3"];
+	    #tunnel=true,
+	    sshflags=`-i /root/.ssh/id_rsa -o "StrictHostKeyChecking no"`,
+		#sshflags=`-i $ssh_key`,
+	    dir="/root/julia/bin",
+	    exename="/root/julia/bin/julia")
+
+		return pids
 end
 
-ssh -o "StrictHostKeyChecking no" localhost
+"TODO"
+function rm_dockerworker(todo)
 
-#TODO create SSH keys at host and containers
-ssh_key=homedir()*"/.ssh/id_rsa"
-ssh_pubkey=homedir()*"/.ssh/id_rsa.pub"
+end
 
-pid = addprocs(
-    #["$ip"];
-	["172.17.0.3"];
-    #tunnel=true,
-    sshflags=`-i /root/.ssh/id_rsa -o "StrictHostKeyChecking no"`,
-	#sshflags=`-i $ssh_key`,
-    dir="/root/julia/bin",
-    exename="/root/julia/bin/julia")
+"TODO get container I/O usage"
+function dockerworker_io(todo)
 
+end
 
+"TODO get container net usage"
+function dockerworker_net(todo)
 
-#end
+end
 
-addprocs(2)
+"TODO get container CPU usage"
+function dockerworker_cpu(todo)
+
+end
+
+"TODO get container mem usage"
+function dockerworker_mem(todo)
+
+end
