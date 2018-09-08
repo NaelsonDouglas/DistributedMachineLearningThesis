@@ -9,39 +9,44 @@
 
 listof_containers = []
 juliabin = "/opt/julia/bin/julia"
-#img="hello-world"
-img="hello-world"
 
-"Executes the command `docker pull $img`"
-function pullimage()
-	try
-		run(`docker pull $img`)
-	catch
-		error("Could NOT pull Docker image `$img`. Check Internet connection. System will quit now.")
-		exit(1)
-	end
+# checking OS
+if ! ( is_apple() || is_linux() )
+	error("Operating system NOT supported! Should use either Linux or MacOS.
+		Exiting Julia...")
+	exit(1)
 end
+1
 
-"
-Run a container with the specified `nofcpus` and memory limit in Bytes (`memlimit`).
-The defautl values for memory and CPU is 512MB and 1 core.
-Return the `container_id` or `-1 ` if not sucessful.
-"
-function run_container(nofcpus=0, memlimit=512)
+# "Executes the command `docker pull $img`"
+# function dockerpull(img="hello-world")
+# 	try
+# 		run(`docker pull $img`)
+# 	catch
+# 		error("Could NOT pull Docker image `$img`. Check Internet connection. System will quit now.")
+# 		exit(1)
+# 	end
+# end
+
+"Run a container with the specified `nofcpus` and memory limit in MBytes (`memlimit`).
+The defautl values for memory and CPU is 2000MB and 1 core.
+Return the `container_id` or `-1 ` if not sucessful."
+function dockerrun(img="hello-world", params="-ti", nofcpus=1, memlimit=2000)
+	#TODO param --cpuset-cpus : CPUs in which to allow execution (0-3, 0,1)
+	memlimit = memlimit * 10^6 # converting mem to MB
+
+	BUGAY: acho que foi o filename aqui!
 	temp_cont_filename = string(randstring(10))
-	#cmd = "docker run -itd $memory $cpus $img"
-	cmd = "docker run -itd $img"
-
-	info("Running docker image $img")
 	temp_cont_filename_string = string(temp_cont_filename)
+	info("Running docker container...")
 	try
-		#run(pipeline(`docker run -itd $memlimit $nofcpus $img`, temp_cont_filename_string))
-		run(pipeline(`docker run -itd $img`, temp_cont_filename_string))
+		run(pipeline(`docker run $params --cpus $nofcpus -m $memlimit $img`,
+			temp_cont_filename_string))
 	catch
 		error("Container NOT deployed: could not execute: $cmd")
 		return -1
 	end
-	info("Output from docker `$cmd` command was stored at $temp_cont_filename_string")
+	info("Output from docker command was stored at $temp_cont_filename_string")
 	f = open(temp_cont_filename_string)
 	container_id =readlines(f)[1]
 	info("Container ID is $container_id")
@@ -52,19 +57,18 @@ function run_container(nofcpus=0, memlimit=512)
 	return container_id
 end
 
-"
-Remove a Docker container by Docker container ID.
+
+"Remove a Docker container by Docker container ID.
 This function froces a container to stop.
 Return `false` if not successful.
-Example: TODO
-"
-function rmcontainer(container_id::String)
+Example: TODO"
+function dockerrm(container_id::String)
 		filename = "docker_output.tmp"
 		try
 			info("Removing container $container_id")
 			run(pipeline(`docker rm -f $container_id`, filename)) #, append=true))
 		catch
-			warn("Container NOT delete container $container_id: could not execute 'docker rm' command. See $filename")
+			warn("Container NOT deleted (container ID=$container_id): could not execute 'docker rm' command. See $filename")
 		end
 		filter!(x -> x ≠ "$container_id", listof_containers)
 		info("Container $container_id removed.")
@@ -77,7 +81,7 @@ Delete all Docker deployed containers.
 This function froces a container to stop.
 Return `false` if not successful.
 "
-function deletecontainers()
+function dockerrm_all()
 		if isempty(listof_containers)
 			info("No container to be deleted!")
 			return true
@@ -85,7 +89,7 @@ function deletecontainers()
 
 		containers = copy(listof_containers)
 		for c in containers
-			rmcontainer(c)
+			dockerrm(c)
 		end
 end
 
@@ -106,30 +110,37 @@ function execute_code(code,container_id)
 	return readlines(filename)
 end
 
+function test_docker_backend(use_dmlt=false)
 
-
-function test_docker_backend()
-
-	# creating and removing 3 containers
+	println("TEST > creating and removing 3 containers")
 	for i in 1:3
-		run_container()
+		dockerrun()
 	end
 	@show listof_containers
-	deletecontainers()
+	dockerrm_all()
 	@show listof_containers
-	deletecontainers() # should print an INFO
+	dockerrm_all() # should print an INFO
 
-	# creating a customized container and removing it
-	cid = run_container(["512","2"])
-	@show listof_containers
-	rmcontainer(cid)
+	if use_dmlt
+		println("TEST > creating a dml container and removing it")
+		cid = dockerrun("dmlt", "-tdi", 2, 512)
+		@show listof_containers
 
-	rmcontainer("a") # should print an Error
+		println("TEST > execute a simple Julia call at at the dml container")
+		println(run(`docker exec $cid ls`))
+		println(execute_code("-E \"println(sqrt(144));1+13\"",cid)) # buggy: should print the result
+		dockerrm(cid)
+	end
 
-	global img = "dmlt" #TODO pull dml Dockerhub and build dmlt
-	cid = run_container()
-	println(run(`docker exec $cid ls`))
-	println(execute_code("-E \"println(sqrt(144));1+13\"",cid)) # buggy: should print the result
-	rmcontainer(cid)
+	println("TEST > removing an unexistent container, should print an Error")
+	dockerrm("a")
 
 end
+
+test_docker_backend()
+@show listof_containers
+
+for i in 1:3
+	dockerrun()
+end
+dockerrm_all()

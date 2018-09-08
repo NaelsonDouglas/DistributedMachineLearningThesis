@@ -24,6 +24,7 @@ Remark: GNU/Linux users may need to call `sudo` before `docker` command.
 cd src/ 
 docker build --no-cache -t dmlt .
 ```
+Remark: it is **mandatory** that this image should be tagged to `dmlt`, so do NOT change the `dmlt` name in the command above.
 
 ### Create an interactive Docker container and start a Bash session on it
 
