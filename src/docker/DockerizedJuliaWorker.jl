@@ -30,6 +30,7 @@ function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 	end
 
 	info("Creating $nofworkers Worker(s) through SSH...")
+	pids=[]
 	try
 		pids = addprocs(
 			ips,
@@ -41,6 +42,7 @@ function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 			Exiting Julia...")
 		exit(1)
 	end
+	info("List of deployed workers is: \n$pids")
 	return pids
 end
 
