@@ -49,13 +49,9 @@ function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 end
 
 "TODO"
-function rm_dockerworker(todo)
-	#TODO
-end
-
-"TODO get container net usage"
-function dockerworker_net(cid::String)
-	
+function rm_dockerworker(pids)
+	rmprocs(pids)
+	#TODO remove container
 end
 
 "TODO get container I/O usage"

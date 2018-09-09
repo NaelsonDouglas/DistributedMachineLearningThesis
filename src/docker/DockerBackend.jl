@@ -50,9 +50,7 @@ function dockerrun(img="dmlt", params="-tid", nofcpus=1, memlimit=2048)
 	cmd = Cmd(`docker run $params --cpus $nofcpus -m $memlimit $img`)
 	try
 		o = execute_cmd(cmd)
-		@show o
 		cid = o[1]
-		@show cid
 		push!(listof_containers,cid)
 		info("Container $cid is up")
 		return cid
@@ -147,7 +145,7 @@ function dockerstat_blockio(cid::String)
 	cmd = Cmd(`docker stats --no-stream --format "{{.NetIO}}"  $cid`)
 	return execute_cmd(cmd)
 end
-cid = dockerrun()
+
 
 function test_docker_backend()
 	println("\n\n== TEST > creating and removing 3 containers")
