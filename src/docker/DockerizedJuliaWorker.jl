@@ -32,7 +32,7 @@ function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 	end
 
 	info("Creating $nofworkers Worker(s) through SSH...")
-	pids=[]
+	pids=String[]
 	try
 		pids = addprocs(
 			ips,
