@@ -16,124 +16,115 @@ if ! ( is_apple() || is_linux() )
 end
 
 "Executes the command `docker pull $img`"
-function dockerpull(img="hello-world")
+function docker_pull(img="hello-world")
+	cmd = Cmd(`docker pull $img`)
 	try
-		run(`docker pull $img`)
+		execute_cmd(cmd)
+		return true
 	catch
-		error("Could NOT pull Docker image `$img`. Check Internet connection. System will quit now.")
-		exit(1)
+		return false
 	end
 end
 
-"Run a container.
-Return the `container_id` or `-1 ` if not sucessful."
-function dockerrun(img="dmlt", params="-tid", nofcpus=1, memlimit=2000)
+"Run a container by using the given parameters. Return the container ID or `false` if not sucessful."
+function dockerrun(img="dmlt", params="-tid", nofcpus=1, memlimit=2048)
 	#TODO param --cpuset-cpus : CPUs in which to allow execution (0-3, 0,1)
 	memlimit = memlimit * 10^6 # converting mem to MB
-	temp_cont_filename = string(randstring(10))
-	temp_cont_filename_string = string(temp_cont_filename)
-
-
-	cmd="docker run $params --cpus $nofcpus -m $memlimit $img"
-	#info("Running docker command: $cmd")
+	cmd = Cmd(`docker run $params --cpus $nofcpus -m $memlimit $img`)
 	try
-		run(pipeline(`docker run $params --cpus $nofcpus -m $memlimit $img`, temp_cont_filename_string))
+		o = execute_cmd(cmd)
+		@show o
+		cid = o[1]
+		@show cid
+		push!(listof_containers,cid)
+		info("Container $cid is up")
+		return cid
 	catch
-		error("Container NOT deployed: could not execute Docker command: $cmd")
-		return -1
+		return false
 	end
-	#debug("Output from docker command was stored at $temp_cont_filename_string")
-	f = open(temp_cont_filename_string)
-	container_id =readlines(f)[1]
-	#debug("Container ID is $container_id")
-	push!(listof_containers,container_id)
-
-	rm(temp_cont_filename, force=true)
-	info("Container $container_id is up")
-	return container_id
 end
 
-"Remove a Docker container by Docker container ID.
-This function froces a container to stop.
-Return `false` if not successful.
-Example: TODO"
-function dockerrm(container_id::String)
-		filename = "docker_output.tmp"
-		try
-			#debug("Removing container $container_id")
-			run(pipeline(`docker rm -f $container_id`, filename)) #, append=true))
-		catch
-			warn("Container NOT deleted (container ID=$container_id):
-				could not execute 'docker rm' command. See $filename")
-		end
-		filter!(x -> x ≠ "$container_id", listof_containers)
-		info("Container $container_id removed.")
-
-	return true
+"Remove a Docker container whose ID is `cid`.
+Return `false` if not successful."
+function dockerrm(cid::String)
+	cmd = Cmd(`docker rm -f $cid`)
+	try
+		execute_cmd(cmd)
+		filter!(x -> x ≠ "$cid", listof_containers)
+		info("Container $cid removed.")
+		return true
+	catch
+		return false
+	end
 end
 
 "
-Delete all Docker deployed containers.
-This function froces a container to stop.
-Return `false` if not successful.
+Delete all containers deployed by `DockerBackend.jl`.
 "
 function dockerrm_all()
 		if isempty(listof_containers)
 			warn("No container to be deleted!")
 			return true
 		end
-
 		containers = copy(listof_containers)
 		for c in containers
 			dockerrm(c)
 		end
 end
 
-"""
-Execute a Julia `code` on the previsouly deployed Docker container.
-Return `false` if not sucessfull.
-"""
-function execute_code(code,container_id::String)
-	filename = "docker_execute_code_output.txt"
+"Execute a Julia `expr` on container `cid`. Return `ERROR` if not sucessfull."
+function execute_julia_expr(expr::String,cid::String)
+	cmd = Cmd(`docker exec $cid $juliabin -E "$expr"`)
 	try
-		#debug("Running command: docker exec $container_id $juliabin $code")
-		run(pipeline(`docker exec $container_id $juliabin $code`, filename)) #, append=true))
+		return execute_cmd(cmd)
 	catch
-		error("Could NOT `docker exec` code on Docker container $container_id. See $filename")
-		return false
+		return ["ERROR"]
 	end
-
-	return readlines(filename)
 end
 
-
 function get_containerip(cid::String)
-	tempfile = "$(randstring(20)).tmp"
+	cmd = Cmd(`docker inspect
+		--format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+		$cid`)
 	try
-		#debug("Running command: docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $cid")
-		run(pipeline(`docker inspect
-			--format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
-			$cid`, tempfile))
+		return execute_cmd(cmd)
 	catch
-		error("Could NOT `docker inspect` to get container IP address. See file $tempfile")
-		return false
+		return ["ERROR"]
 	end
-	f = open(tempfile)
-	ip =readlines(f)[1]
-	rm(tempfile, force=true)
-
-	return ip
 end
 
 function sshup(cid::String)
+	cmd = Cmd(`docker exec $cid /usr/sbin/sshd`)
 	try
-		run(`docker exec $cid /usr/sbin/sshd`)
+		execute_cmd(cmd)
+		return true
 	catch
-		error("Could NOT `docker exec $cid /usr/sbin/sshd` to init SSHD.")
 		return false
 	end
-	info("SSH on container $cid is up")
-	return true
+end
+
+"Return '_the amount of data the container has sent and received over its network
+interface_' if successful. Return `false` otherwise."
+function dockerstat_netio(cid::String)
+	cmd = Cmd(`docker stats --no-stream --format "{{.NetIO}}"  $cid`)
+	return execute_cmd(cmd)
+end
+
+"Execute the command `cmd` and return the output."
+function execute_cmd(cmd::Cmd)
+	tempfile = "$(randstring(20)).tmp"
+	try
+		info("Executing command $cmd...")
+		run(pipeline(cmd, tempfile))
+	catch
+		msg = "Could NOT execute command $cmd.
+			See output file $tempfile"
+		error(msg)
+		return ["ERROR $msg"]
+	end
+	output = readlines(tempfile)
+	rm(tempfile, force=true)
+	return output
 end
 
 function test_docker_backend()
@@ -149,13 +140,13 @@ function test_docker_backend()
 
 	dockerrm_all()
 	@show listof_containers
-	dockerrm_all() # should print an INFO
+	dockerrm_all() # should print a WARN only
 
 	println("\n\n== TEST > create and execute Bash and Julia commands")
 	cid = dockerrun()
 	@show listof_containers
 	println(run(`docker exec $cid ls`))
-	println(execute_code("-E \"1+1\"",cid)) #TODO BUGFIX should print the result
+	println(execute_julia_expr("sqrt(144)",cid))
 	dockerrm(cid)
 
 	println("\n\n== TEST > removing an unexistent container, should print an Error")
