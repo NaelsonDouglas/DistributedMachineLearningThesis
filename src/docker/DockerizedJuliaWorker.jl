@@ -6,8 +6,6 @@ In a nutshell, it creates a Docker container and deloys a Julia worker on it.
 =#
 include("DockerBackend.jl")
 
-PAREI AQUI: ver bug no terminal!
-
 "TODO"
 function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 							nofcpus=1, memlimit=2000)
