@@ -11,8 +11,8 @@ If successful, return the list of the deployed Worker(s), otherwise
 `exit(1)` Julia."
 function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 							nofcpus=1, memlimit=2048)
-	 # nofworkers=1
-	 # img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
+	#nofworkers=1
+	#img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
 	ssh_key=homedir()*"/.ssh/id_rsa"
 	juliabin = "/root/julia/bin/julia"
 
@@ -28,7 +28,7 @@ function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 	info("Getting containers' IP addresses...")
 	ips = []
 	for cid in listof_containers
-		push!(ips, get_containerip(cid))
+		push!(ips, get_containerip(cid)[1])
 	end
 
 	info("Creating $nofworkers Worker(s) through SSH...")
