@@ -15,6 +15,23 @@ if ! ( is_apple() || is_linux() )
 	exit(1)
 end
 
+"Execute the command `cmd` and return the output."
+function execute_cmd(cmd::Cmd)
+	tempfile = "$(randstring(20)).tmp"
+	try
+		info("Executing command $cmd...")
+		run(pipeline(cmd, tempfile))
+	catch
+		msg = "Could NOT execute command $cmd.
+			See output file $tempfile"
+		error(msg)
+		return ["ERROR $msg"]
+	end
+	output = readlines(tempfile)
+	rm(tempfile, force=true)
+	return output
+end
+
 "Executes the command `docker pull $img`"
 function docker_pull(img="hello-world")
 	cmd = Cmd(`docker pull $img`)
@@ -103,29 +120,34 @@ function sshup(cid::String)
 	end
 end
 
-"Return '_the amount of data the container has sent and received over its network
-interface_' if successful. Return `false` otherwise."
-function dockerstat_netio(cid::String)
-	cmd = Cmd(`docker stats --no-stream --format "{{.NetIO}}"  $cid`)
+"Return container's runtime metrics or `false` otherwise.
+.Container  Container name or ID (user input)
+.Name       Container name
+.ID         Container ID
+.CPUPerc    CPU percentage
+.MemUsage   Memory usage
+.NetIO      Network IO
+.BlockIO    Block IO
+.MemPerc    Memory percentage (Not available on Windows)
+.PIDs       Number of PIDs (Not available on Windows)"
+function dockerstat(metrics::String,cid::String)
+	available_metrics = [".Container", ".Name", ".ID", ".CPUPerc", ".MemUsage",
+		".NetIO", ".BlockIO", ".MemPerc", ".PIDs"]
+	if ! contains(==,available_metrics,metrics)
+		error("Metrics $metrics NOT suppoerted!")
+		return false
+	end
+	cmd = Cmd(`docker stats --no-stream --format "{{$metrics}}"  $cid`)
 	return execute_cmd(cmd)
 end
 
-"Execute the command `cmd` and return the output."
-function execute_cmd(cmd::Cmd)
-	tempfile = "$(randstring(20)).tmp"
-	try
-		info("Executing command $cmd...")
-		run(pipeline(cmd, tempfile))
-	catch
-		msg = "Could NOT execute command $cmd.
-			See output file $tempfile"
-		error(msg)
-		return ["ERROR $msg"]
-	end
-	output = readlines(tempfile)
-	rm(tempfile, force=true)
-	return output
+"Return '_the amount of data the container has read to and written from block
+devices on the host_' if successful. Return `false` otherwise."
+function dockerstat_blockio(cid::String)
+	cmd = Cmd(`docker stats --no-stream --format "{{.NetIO}}"  $cid`)
+	return execute_cmd(cmd)
 end
+cid = dockerrun()
 
 function test_docker_backend()
 	println("\n\n== TEST > creating and removing 3 containers")
@@ -137,8 +159,8 @@ function test_docker_backend()
 		ip = get_containerip(cid)
 		println("\nContainer $cid IP ADDR is $ip")
 	end
-
 	dockerrm_all()
+
 	@show listof_containers
 	dockerrm_all() # should print a WARN only
 
@@ -147,8 +169,21 @@ function test_docker_backend()
 	@show listof_containers
 	println(run(`docker exec $cid ls`))
 	println(execute_julia_expr("sqrt(144)",cid))
+
+	println("\n\n== TEST > get container stats")
+	@show dockerstat(".Container",cid)
+	@show dockerstat(".Name",cid)
+	@show dockerstat(".ID",cid)
+	@show dockerstat(".CPUPerc",cid)
+	@show dockerstat(".MemUsage",cid)
+	@show dockerstat(".NetIO",cid)
+	@show dockerstat(".BlockIO",cid)
+	@show dockerstat(".MemPerc",cid)
+	@show dockerstat(".PIDs",cid)
 	dockerrm(cid)
 
 	println("\n\n== TEST > removing an unexistent container, should print an Error")
 	dockerrm("a")
 end
+
+# @time test_docker_backend()
