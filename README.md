@@ -31,11 +31,11 @@ Remark: it is **mandatory** that this image should be tagged to `dmlt`, so do NO
 First, let's set the `DOCKERBIN` variable according to your OS:
 
 ```bash
-DOCKERBIN="/usr/bin/docker" # Linux users
-DOCKERBIN="/usr/local/bin/docker" # MacOS users
+export DOCKERBIN="/usr/bin/docker" # Linux users
+export DOCKERBIN="/usr/local/bin/docker" # MacOS users
 ```
 
-The folloeing command will create a container and run a Bash session on it by using the `dmlt` Docker image:
+The following command will create a container and run a Bash session on it by using the `dmlt` Docker image:
 
 ```bash
 export CID=$(docker run -tid -v /var/run/docker.sock:/var/run/docker.sock -v $DOCKERBIN:/usr/bin/docker dmlt) && docker exec -ti $CID /bin/bash
@@ -49,6 +49,7 @@ From the running container, run the following commands:
 
 ```bash
 cd DistributedMachineLearningThesis/src/
+#TODO  git pull to the right tag
 julia -L master_summary.jl -e "execute_experiment()" 4 100 f1 1234 4 2 
 ```
 In order to run a customized experiment, please read the next Sections.

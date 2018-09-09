@@ -6,12 +6,13 @@ In a nutshell, it creates a Docker container and deloys a Julia worker on it.
 =#
 include("DockerBackend.jl")
 
+PAREI AQUI: ver bug no terminal!
+
 "TODO"
 function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 							nofcpus=1, memlimit=2000)
-	# nofworkers=1
-	# img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
-
+	 # nofworkers=1
+	 # img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
 	ssh_key=homedir()*"/.ssh/id_rsa"
 	juliabin = "/root/julia/bin/julia"
 
@@ -33,7 +34,7 @@ function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 	info("Creating $nofworkers Worker(s) through SSH...")
 	try
 		pids = addprocs(
-			[ips],
+			ips,
 			sshflags=`-i $ssh_key -o "StrictHostKeyChecking no"`,
 			exename="$juliabin")
 	catch
