@@ -1,5 +1,5 @@
 # Overview
-This project run Docker containers and deploy Julia Workers on them.
+This code runs Docker containers and deploys Julia Workers on them.
 
 * Through `DockerizedJuliaWorkers.jl` you can add and remove Dockerized workers.
 * `DockerBackend.jl` is a wrapper for calling Docker CLI commands.
