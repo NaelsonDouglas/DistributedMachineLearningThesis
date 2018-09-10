@@ -117,22 +117,18 @@ end
 .PIDs       Number of PIDs (Not available on Windows)"
 function dockerstat(metrics::String,cid::String)
 	available_metrics = [".Container", ".Name", ".ID", ".CPUPerc", ".MemUsage",
-		".NetIO", ".BlockIO", ".MemPerc", ".PIDs"]
+		".NetIO", ".BlockIO", ".MemPerc", ".PIDs", "all"]
 	if ! contains(==,available_metrics,metrics)
 		error("Metrics $metrics NOT suppoerted!")
 		return false
 	end
+
 	cmd = Cmd(`docker stats --no-stream --format "{{$metrics}}"  $cid`)
+	if metrics == "all"
+		cmd = Cmd(`docker stats --no-stream $cid`)
+	end
 	return execute_cmd(cmd)
 end
-
-"Return '_the amount of data the container has read to and written from block
-devices on the host_' if successful. Return `false` otherwise."
-function dockerstat_blockio(cid::String)
-	cmd = Cmd(`docker stats --no-stream --format "{{.NetIO}}"  $cid`)
-	return execute_cmd(cmd)
-end
-
 
 function test_docker_backend()
 	println("\n\n== TEST > creating and removing 3 containers")
@@ -185,9 +181,10 @@ end
 #
 try
 	execute_cmd(`docker -v`)
+	info("Docker installed!")
 catch
 	error("Docker is neither installed or reacheable. Exiting Julia...")
 	exit(1)
 end
 
-# @time test_docker_backend()
+#@time test_docker_backend()
