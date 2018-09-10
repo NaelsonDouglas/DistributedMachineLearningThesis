@@ -362,19 +362,37 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
    
 
     errors=[]
+    tic()
     for i in 1:nofworkers
         push!(errors,MSE(data_final[i], nodes_outputdata[i]))
     end
+    mse_time = toc()
+    mse_time = floor(mse_time,2)
+    store_masterlog(mse_time,"mse_time","mse_time_seconds",nofworkers) 
+
     println(errors)
     errors2=[]
+
+    tic()
     for i in 1:nofworkers
         push!(errors2, MAPE(transpose(data_final[i]), nodes_outputdata[i]))
     end
+    mape_time = toc()
+    mape_time = floor(mape_time,2)
+    store_masterlog(mape_time,"mape_time","mape_time_seconds",nofworkers) 
+
     println(errors2)
     errors3=[]
+
+    tic()
     for i in 1:nofworkers
         push!(errors3, R2(transpose(data_final[i]), nodes_outputdata[i]))
     end
+    r2_time = toc()
+    r2_time = floor(r2_time,2)
+    store_masterlog(r2_time,"r2_time","r2_time_seconds",nofworkers) 
+
+    
     println(errors3)
     
     archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_MSE_summary.txt"
