@@ -84,9 +84,9 @@ function generatetable(resultsdir::String)
     end
     #Makes the column "elapsed_time" be the last column
     
-    elapsed_t = table[:elapsed_time]    
-    delete!(table,:elapsed_time)
-    table[:elapsed_time] = elapsed_t    
+    #elapsed_t = table[:elapsed_time_seconds]    
+    #delete!(table,:elapsed_time_seconds)
+    #table[:elapsed_time_seconds] = elapsed_t    
 
 
     output_file = "./results/"*resultsdir*"/system.csv"

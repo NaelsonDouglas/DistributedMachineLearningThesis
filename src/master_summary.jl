@@ -8,6 +8,7 @@ using DataFrames
 include("datasets.jl")
 include("statistics.jl")
 include("results_handler.jl")
+
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
 #  This function doesn't need to be run on every node because the master has all
@@ -206,7 +207,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     master_maxmim_time = toc() #Master maxmim
     master_maxmim_time = floor(master_maxmim_time,2)
 
-    store_masterlog(master_maxmim_time, string("calculate_maxmin/","temp_",myid()),"calculate_maxmin")
+    store_masterlog(master_maxmim_time, string("calculate_maxmin/","temp_",myid()),"calculate_maxmin_seconds")
     info("\n Merged maxmim logs")
     mergelogs("calculate_maxmin")
     
@@ -234,7 +235,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     # Naelson: STOP Histogram Creation Share Time!!!!! 
     histogram_create_time = toc()#Histogram time
     histogram_create_time = floor(histogram_create_time,2)    
-    store_masterlog(histogram_create_time, "histogram_create_time","create_histogram",nofworkers)
+    store_masterlog(histogram_create_time, "histogram_create_time","create_histogram_seconds",nofworkers)
 
      
     create_neighborhoods_stats_kmeans_time = 0
@@ -266,7 +267,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     local_training_time = toc() #Local models
     local_training_time = floor(local_training_time,2)
-    store_masterlog(local_training_time, string("train_local_model/","temp_",myid()),"local_training")
+    store_masterlog(local_training_time, string("train_local_model/","temp_",myid()),"local_training_seconds")
     info("\n Merged train local model logs")        
     mergelogs("train_local_model")
 
@@ -295,7 +296,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     clustering_time = toc() + create_neighborhoods_stats_kmeans_time
     clustering_time = floor(clustering_time,2)
     
-    store_masterlog(clustering_time,"clustering_time","clustering_time",nofworkers)
+    store_masterlog(clustering_time,"clustering_time","clustering_time_seconds",nofworkers)
     
 
 
@@ -318,7 +319,7 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     train_global_model_time = toc()
     train_global_model_time = floor(train_global_model_time ,2)
     
-    store_masterlog(train_global_model_time,string("train_global_model/","temp_",myid(),".csv"),"train_global_model")
+    store_masterlog(train_global_model_time,string("train_global_model/","temp_",myid(),".csv"),"train_global_model_seconds")
     info("\n Merged train global model logs")    
     mergelogs("train_global_model")
     
@@ -351,13 +352,13 @@ function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     # Naelson: STOP Testing Model Time!!!!!
     testing_model_time = toc() #Testing Model
     testing_model_time = floor(testing_model_time,2)
-    store_masterlog(testing_model_time,"testing_model_time","testing_model",nofworkers)
+    store_masterlog(testing_model_time,"testing_model_time","testing_model_seconds",nofworkers)
 
     
      #TODO CALCULAR ISSO ---- O MOCHA USA ESSA VARIÁVEL, POR ISSO ESTOU HARDCODANDO 
    elapsed_time = toc()
    elapsed_time = floor(elapsed_time,2)
-   store_masterlog(elapsed_time,"elapsed_time","elapsed_time",nofworkers)
+   store_masterlog(elapsed_time,"elapsed_time","elapsed_time_seconds",nofworkers)
    
 
     errors=[]
