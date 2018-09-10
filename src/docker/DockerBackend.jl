@@ -1,9 +1,3 @@
-#TODO list
-#* verify that Docker is installed
-#* check Internet conection and/or image availability
-#* pull dml dockerhub image to enable full test
-#* docker login to pull further Dockerhub images
-
 listof_containers = []
 juliabin = "/opt/julia/bin/julia"
 img="dmlt" #BUGFIX Atom: to let Atom include this file
@@ -12,6 +6,14 @@ img="dmlt" #BUGFIX Atom: to let Atom include this file
 if ! ( is_apple() || is_linux() )
 	error("Operating system NOT supported! Should use either Linux or MacOS.
 		Exiting Julia...")
+	exit(1)
+end
+
+# checking docker
+try
+	execute_cmd(`docker -v`)
+catch
+	error("Docker is neither installed or reacheable. Exiting Julia...")
 	exit(1)
 end
 

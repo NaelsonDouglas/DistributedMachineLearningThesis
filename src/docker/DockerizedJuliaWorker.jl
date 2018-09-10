@@ -9,7 +9,7 @@ include("DockerBackend.jl")
 "Run Docker container(s) and use them to deploy Julia Worker(s).
 If successful, return the list of the deployed Worker(s), otherwise
 `exit(1)` Julia."
-function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
+function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 							nofcpus=1, memlimit=2048)
 	#nofworkers=1
 	#img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
@@ -48,23 +48,8 @@ function add_dockerworker(nofworkers::Int,img="dmlt", params="-tid",
 	return pids
 end
 
-"TODO"
-function rm_dockerworker(pids)
-	rmprocs(pids)
-	#TODO remove container
-end
-
-"TODO get container I/O usage"
-function dockerworker_io(todo)
-	#TODO
-end
-
-"TODO get container CPU usage"
-function dockerworker_cpu(todo)
-	#TODO
-end
-
-"TODO get container mem usage"
-function dockerworker_mem(todo)
-	#TODO
+"Removes all workers and all deployed containers."
+function rmalldockerworkers()
+	rmprocs(workers())
+	dockerrm_all()
 end
