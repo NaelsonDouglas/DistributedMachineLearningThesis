@@ -1,4 +1,8 @@
 
+"Stores the csv with the measuments done by the master. If for this specific metric the workers do not take any part in measuring, 
+time : the data itself to be saved (time in seconds)
+file : the filename to be saved under src/results/file.csv
+adds 'n_workers' lines with zeros to keep the "
 function store_masterlog(time, file::String,header,n_workers=0)
     putheader(file,header)
 
@@ -17,7 +21,7 @@ function store_masterlog(time, file::String,header,n_workers=0)
     flush(f)
     close(f)
 end
-
+"Adds a header to the specified single column csv"
 function putheader(csv::String, header::String)
     f = open(EXECUTING_PATH*csv*".csv","a+")
     write(f,header*"\n")
@@ -26,7 +30,9 @@ function putheader(csv::String, header::String)
 end
 
 
+"Get the individual logs created by the workers and merge them into a single file
 
+You only need to specify where these individual csv's are stored and the function merges them into a single file"
 function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
     logs = readdir(EXECUTING_PATH*logsdir*"/")    
         
@@ -59,6 +65,11 @@ function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
     
 end
 
+
+#Todo change this function to make it work with both system and statistics
+"Gets a folder with the individual csv's (maxmim,global tests, histogram time) logs and creates the system.csv
+
+It stores the final output on src/results/system.csv and also returns it as a DataFrame"
 function generatetable(resultsdir::String)
     logs = readdir("./results/"*resultsdir)
         
@@ -72,7 +83,7 @@ function generatetable(resultsdir::String)
         table = hcat(table,currenttable)
     end
     #Makes the column "elapsed_time" be the last column
-    @show table
+    
     elapsed_t = table[:elapsed_time]    
     delete!(table,:elapsed_time)
     table[:elapsed_time] = elapsed_t    
