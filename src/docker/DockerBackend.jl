@@ -2,21 +2,6 @@ listof_containers = []
 juliabin = "/opt/julia/bin/julia"
 img="dmlt" #BUGFIX Atom: to let Atom include this file
 
-# checking OS
-if ! ( is_apple() || is_linux() )
-	error("Operating system NOT supported! Should use either Linux or MacOS.
-		Exiting Julia...")
-	exit(1)
-end
-
-# checking docker
-try
-	execute_cmd(`docker -v`)
-catch
-	error("Docker is neither installed or reacheable. Exiting Julia...")
-	exit(1)
-end
-
 "Execute the command `cmd` and return the output."
 function execute_cmd(cmd::Cmd)
 	tempfile = "$(randstring(20)).tmp"
@@ -184,6 +169,25 @@ function test_docker_backend()
 
 	println("\n\n== TEST > removing an unexistent container, should print an Error")
 	dockerrm("a")
+end
+
+#
+# checking OS
+#
+if ! ( is_apple() || is_linux() )
+	error("Operating system NOT supported! Should use either Linux or MacOS.
+		Exiting Julia...")
+	exit(1)
+end
+
+#
+# checking docker
+#
+try
+	execute_cmd(`docker -v`)
+catch
+	error("Docker is neither installed or reacheable. Exiting Julia...")
+	exit(1)
 end
 
 # @time test_docker_backend()
