@@ -21,7 +21,7 @@ After cloning this repository, execute the following commands.
 Remark: GNU/Linux users may need to call `sudo` before `docker` command.
 
 ```bash
-cd src/ 
+cd DistributedMachineLearningThesis/src/
 docker build --no-cache -t dmlt .
 ```
 Remark: it is **mandatory** that this image should be tagged to `dmlt`, so do NOT change the `dmlt` name in the command above.
@@ -48,9 +48,10 @@ The `-v` parameters are necessary to allow the prototype to create further conta
 From the running container, run the following commands:
 
 ```bash
+export JULIABIN="/root/julia/bin/julia"
 cd DistributedMachineLearningThesis/src/
 #TODO  git pull to the right tag
-julia -L master_summary.jl -e "execute_experiment()" 4 100 f1 1234 4 2 
+$JULIABIN -L master_summary.jl -e "execute_experiment()" 4 100 f1 1234 4 2 
 ```
 In order to run a customized experiment, please read the next Sections.
 
