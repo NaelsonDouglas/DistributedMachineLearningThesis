@@ -2,9 +2,14 @@
 "Stores the csv with the measuments done by the master. If for this specific metric the workers do not take any part in measuring, 
 time : the data itself to be saved (time in seconds)
 file : the filename to be saved under src/results/file.csv
-adds 'n_workers' lines with zeros to keep the "
-function store_masterlog(time, file::String,header,n_workers=0)
-    putheader(file,header)
+adds 'n_workers' lines with zeros to keep the table with a consistent size if needed
+
+breakline adds a \n at the end of the inserted data. <----It's no longer used for anything. I shall remove it soon"
+function store_masterlog(time, file::String,header="",n_workers=0;breakline=true)
+    
+    if length(header) >0
+        putheader(file,header)
+    end
 
     f = open(EXECUTING_PATH*file*".csv","a+")       
     write(f,string(time))  
@@ -18,6 +23,10 @@ function store_masterlog(time, file::String,header,n_workers=0)
             end
         end
     end
+
+    if breakline
+        write(f,"\n")          
+    end
     flush(f)
     close(f)
 end
@@ -25,6 +34,13 @@ end
 function putheader(csv::String, header::String)
     f = open(EXECUTING_PATH*csv*".csv","a+")
     write(f,header*"\n")
+    flush(f)
+    close(f)
+end
+
+function breakline(csv::String)
+    f = open(EXECUTING_PATH*csv*".csv","a+")
+    write(f,"\n")
     flush(f)
     close(f)
 end

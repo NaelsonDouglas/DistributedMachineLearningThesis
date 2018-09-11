@@ -40,25 +40,25 @@ RUN cat $HOME/.ssh/id_rsa.pub > $HOME/.ssh/authorized_keys \
 # #
 # RUN git clone https://github.com/NaelsonDouglas/DistributedMachineLearningThesis.git
 # # adding packages
-# RUN ~/julia/bin/julia -e 'Pkg.add("CSV")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("DataFrames")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("Clustering")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("Distributions")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("MultivariateStats")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("Debug")'
-# #RUN ~/julia/bin/julia -e 'Pkg.add("HDF5")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("Mocha")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("DataFrames")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("Distances")'
-# RUN ~/julia/bin/julia -e 'Pkg.add("Logging")'
+RUN ~/julia/bin/julia -e 'Pkg.add("CSV")'
+RUN ~/julia/bin/julia -e 'Pkg.add("DataFrames")'
+RUN ~/julia/bin/julia -e 'Pkg.add("Clustering")'
+RUN ~/julia/bin/julia -e 'Pkg.add("Distributions")'
+RUN ~/julia/bin/julia -e 'Pkg.add("MultivariateStats")'
+RUN ~/julia/bin/julia -e 'Pkg.add("Debug")'
+RUN ~/julia/bin/julia -e 'Pkg.add("HDF5")'
+RUN ~/julia/bin/julia -e 'Pkg.add("Mocha")'
+RUN ~/julia/bin/julia -e 'Pkg.add("DataFrames")'
+RUN ~/julia/bin/julia -e 'Pkg.add("Distances")'
+RUN ~/julia/bin/julia -e 'Pkg.add("Logging")'
 # # pinning packages
-# RUN ~/julia/bin/julia -e 'Pkg.pin("CSV", v"0.2.5")'
-# RUN ~/julia/bin/julia -e 'Pkg.pin("DataFrames", v"0.11.7")'
-# RUN ~/julia/bin/julia -e 'Pkg.pin("Mocha", v"0.3.1")'
-# RUN ~/julia/bin/julia -e 'Pkg.pin("Clustering", v"0.7.0")'
-# RUN ~/julia/bin/julia -e 'Pkg.pin("MultivariateStats", v"0.3.0")'
-# RUN ~/julia/bin/julia -e 'Pkg.pin("Debug", v"0.1.5")'
-# RUN ~/julia/bin/julia -e 'Pkg.pin("Distributions", v"0.15.0")'
+RUN ~/julia/bin/julia -e 'Pkg.pin("CSV", v"0.2.5")'
+RUN ~/julia/bin/julia -e 'Pkg.pin("DataFrames", v"0.11.7")'
+RUN ~/julia/bin/julia -e 'Pkg.pin("Mocha", v"0.3.1")'
+RUN ~/julia/bin/julia -e 'Pkg.pin("Clustering", v"0.7.0")'
+RUN ~/julia/bin/julia -e 'Pkg.pin("MultivariateStats", v"0.3.0")'
+RUN ~/julia/bin/julia -e 'Pkg.pin("Debug", v"0.1.5")'
+RUN ~/julia/bin/julia -e 'Pkg.pin("Distributions", v"0.15.0")'
 #TODO Pkg.clone("https://github.com/ararslan/OperatingSystems.jl.git")
 
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/root/julia/bin/"
