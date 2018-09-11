@@ -5,7 +5,7 @@ This repository has the reproducible material for running the experiments of the
 
 ## Requirements 
 * Linux or MacOS operating system
-* [Docker](https://www.docker.com/products/docker-desktop)
+* [Docker](https://www.docker.com/products/docker-desktop) version 18.06.1-ce or higher
 * Code and data:
 
 ```bash
