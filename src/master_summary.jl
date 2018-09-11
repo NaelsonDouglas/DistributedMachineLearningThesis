@@ -175,7 +175,7 @@ function create_neighborhoods(histograms)
     return neigh
 end
 
-function run(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
+function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     
     tic() #<-----elapsed_time
     Logging.configure(level=INFO)
@@ -452,12 +452,12 @@ function execute_experiment()
         if length(ARGS) >= 6
             dims = parse(Int, ARGS[6])
             println(string(dims))
-            run(n_of_procs, n_of_examples, funcion, num_nodes, dims)
+            run_experiments(n_of_procs, n_of_examples, funcion, num_nodes, dims)
         else
-            run(n_of_procs, n_of_examples, funcion, num_nodes)
+            run_experiments(n_of_procs, n_of_examples, funcion, num_nodes)
         end
     else
-        run(n_of_procs, n_of_examples, funcion)
+        run_experiments(n_of_procs, n_of_examples, funcion)
     end 
     
     commit = readstring(`git log --pretty=format:'%h' -n 1`)
