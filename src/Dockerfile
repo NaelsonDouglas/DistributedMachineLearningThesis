@@ -38,7 +38,7 @@ RUN cat $HOME/.ssh/id_rsa.pub > $HOME/.ssh/authorized_keys \
 # #
 # # DML stuff
 # #
-# RUN git clone https://github.com/NaelsonDouglas/DistributedMachineLearningThesis.git
+RUN git clone https://github.com/NaelsonDouglas/DistributedMachineLearningThesis.git
 # # adding packages
 RUN ~/julia/bin/julia -e 'Pkg.add("CSV")'
 RUN ~/julia/bin/julia -e 'Pkg.add("DataFrames")'
