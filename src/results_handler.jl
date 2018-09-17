@@ -5,7 +5,7 @@ file : the filename to be saved under src/results/file.csv
 adds 'n_workers' lines with zeros to keep the table with a consistent size if needed
 
 breakline adds a \n at the end of the inserted data. <----It's no longer used for anything. I shall remove it soon"
-function store_masterlog(time, file::String,header="",n_workers=0;breakline=true)
+function store_masterlog(time, file::String,header="",n_workers=0;breakline=false)
     
     if length(header) >0
         putheader(file,header)
@@ -95,7 +95,7 @@ function generatetable(resultsdir::String)
     table = DataFrame()
     for l in logs
         currenttable = CSV.read(l)
-        rm(l)
+        rm(l)          
         table = hcat(table,currenttable)
     end
     #Makes the column "elapsed_time" be the last column

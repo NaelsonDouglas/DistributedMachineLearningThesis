@@ -368,6 +368,10 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         mse =  MSE(data_final[i], nodes_outputdata[i])
         push!(errors,mse)
         store_masterlog(mse,"mse")        
+
+        if (i!= nofworkers)
+            store_masterlog("\n","mse")
+        end
     end
     
 
@@ -380,6 +384,10 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         mape = MAPE(transpose(data_final[i]), nodes_outputdata[i])
         push!(errors2, mape)
         store_masterlog(mape,"mape")
+        
+        if (i!= nofworkers)
+            store_masterlog("\n","mape")
+        end
     end
     
 
@@ -392,6 +400,9 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         r2 = R2(transpose(data_final[i]), nodes_outputdata[i])
         push!(errors3, r2)
         store_masterlog(r2,"r2")                
+        if (i!= nofworkers)
+            store_masterlog("\n","r2")
+        end
     end
     
 
