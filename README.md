@@ -38,7 +38,7 @@ export DOCKERBIN="/usr/local/bin/docker" # MacOS users
 The following command will create a container and run a Bash session on it by using the `dmlt` Docker image:
 
 ```bash
-export CID=$(docker run -tid -v /var/run/docker.sock:/var/run/docker.sock -v $DOCKERBIN:/usr/bin/docker dmlt) && docker exec -ti $CID /bin/bash
+export CID=$(docker run --cpus 1 -tid -v /var/run/docker.sock:/var/run/docker.sock -v $DOCKERBIN:/usr/bin/docker dmlt) && docker exec -ti $CID /bin/bash
 ```
 
 The `-v` parameters are necessary to allow the prototype to create further containers from the just-created container. 
