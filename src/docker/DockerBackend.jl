@@ -184,7 +184,7 @@ function dockerstat(metrics::String,cid::String)
 		return false
 	end
 
-	cmd = Cmd(`docker stats --no-stream --format "{{$metrics}}"  $	`)
+	cmd = Cmd(`docker stats --no-stream --format "{{$metrics}}"  $cid`)
 	if metrics == "all"
 		cmd = Cmd(`docker stats --no-stream $cid`)
 	end
