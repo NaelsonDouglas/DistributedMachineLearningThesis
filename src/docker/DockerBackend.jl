@@ -105,6 +105,67 @@ function sshup(cid::String)
 	end
 end
 
+
+
+"It's an auxiliar function for filter_result. It just removes the empty spaces on each line"
+function filterline(line)
+	line =replace(line,"  ","_")
+	line =split(line,"_")
+	line =filter(line) do x
+		x!=""
+	end
+	reshape(line,(1,length(line)))
+end
+
+
+"It gets the output of dockerstat(..) and formats it into a vector
+* The keyworkd 'lines' tells which part of the output you want
+* lines=\"header\" returns a csv string with the header
+* lines=\"data\" returns a csv string with the data
+* lines=\"all\" returns both"
+function filter_result(dockerstat_output;lines="all")
+	header = dockerstat_output[1]
+	data = dockerstat_output[2]
+
+	header = filterline(header)
+	data = filterline(data)
+
+	if (lines == "all")
+		return vcat(header,data)
+	elseif (lines == "header")
+		return header
+	elseif  (lines == "data")
+		return data
+	end
+end
+
+
+#TODO THIS FUNCTION IS NOT MEANT TO BE IN DockerBackend.jl
+#TODO move it to a better place
+"* It's an auxiliar function
+Gets a  1:n vector of strings and turns it into a csv String
+* vectortocsv([\"1\",\"2\",\"3\"])
+* \"1,2,3\"
+"
+function vectortocsv(vector)
+	buffer = ""
+	for i in vector
+		if (buffer != "")
+			buffer = buffer*","*i
+		else
+			buffer = i
+		end
+	end
+	buffer = filter(buffer) do x
+		x!=" "
+	end
+	buffer = replace(buffer," ","")
+	return buffer
+end
+
+
+
+
 "Return container's runtime metrics or `false` otherwise.
 .Container  Container name or ID (user input)
 .Name       Container name
@@ -123,7 +184,7 @@ function dockerstat(metrics::String,cid::String)
 		return false
 	end
 
-	cmd = Cmd(`docker stats --no-stream --format "{{$metrics}}"  $cid`)
+	cmd = Cmd(`docker stats --no-stream --format "{{$metrics}}"  $	`)
 	if metrics == "all"
 		cmd = Cmd(`docker stats --no-stream $cid`)
 	end
