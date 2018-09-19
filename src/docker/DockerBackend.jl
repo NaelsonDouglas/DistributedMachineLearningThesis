@@ -142,10 +142,10 @@ end
 
 " returns a .csv formated string of all metrics in the specified containers
 * containers: a vector with all the containers to be analyzed"
-function analyse_containers(containers=map(string,workers()))
+function analyse_containers(containers=workers())
 	dockerdata = ""
 	for i in containers
-		current_cont_status = dockerstat("all",i)
+		current_cont_status = dockerstat("all",workerstat(i))
 		data = filter_result(current_cont_status;lines="data")
 		data = vectortocsv(data)
 		if dockerdata == ""
@@ -185,13 +185,13 @@ function dockerstat(metrics::String,cid::String)
 	return execute_cmd(cmd)
 end
 
-
+#=
 #TODO: REMOVE THIS FUNCTION!!!!
 function dockerstat(metric::String, cid::String)
     h=["CONTAINER           CPU %               MEM USAGE / LIMIT      MEM %               NET I/O             BLOCK I/O           PIDS";
 "2c181b4125c0        0.00%               93.8 MiB / 1.907 GiB   4.80%               6.97 kB / 5.54 kB   0 B / 0 B           "*cid]
 end     
-
+=#
 
 function test_docker_backend()
 	println("\n\n== TEST > creating and removing 3 containers")

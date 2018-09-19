@@ -207,8 +207,9 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     Logging.configure(level=INFO)
     
     info("Adding ", nofworkers, " workers...\n")
-    addprocs(nofworkers)
-    workers
+    adddockerworkers(nofworkers)
+    #addprocs(nofworkers)
+    #workers
 
     info("Including workers code and functions...\n")
     include("workers.jl")
