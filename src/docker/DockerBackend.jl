@@ -107,6 +107,7 @@ end
 
 
 
+
 "It's an auxiliar function for filter_result. It just removes the empty spaces on each line"
 function filterline(line)
 	line =replace(line,"  ","_")
@@ -128,10 +129,10 @@ function filter_result(dockerstat_output;lines="all")
 	data = dockerstat_output[2]
 
 	header = filterline(header)
-	data = filterline(data)
+	data = filterline(data)	
 
 	if (lines == "all")
-		return vcat(header,data)
+		return vcat(vectortocsv(header),vectortocsv(data))
 	elseif (lines == "header")
 		return header
 	elseif  (lines == "data")
@@ -139,28 +140,21 @@ function filter_result(dockerstat_output;lines="all")
 	end
 end
 
-
-#TODO THIS FUNCTION IS NOT MEANT TO BE IN DockerBackend.jl
-#TODO move it to a better place
-"* It's an auxiliar function
-Gets a  1:n vector of strings and turns it into a csv String
-* vectortocsv([\"1\",\"2\",\"3\"])
-* \"1,2,3\"
-"
-function vectortocsv(vector)
-	buffer = ""
-	for i in vector
-		if (buffer != "")
-			buffer = buffer*","*i
+" returns a .csv formated string of all metrics in the specified containers
+* containers: a vector with all the containers to be analyzed"
+function analyse_containers(containers=map(string,workers()))
+	dockerdata = ""
+	for i in containers
+		current_cont_status = dockerstat("all",i)
+		data = filter_result(current_cont_status;lines="data")
+		data = vectortocsv(data)
+		if dockerdata == ""
+			dockerdata = vcat(data)
 		else
-			buffer = i
+			dockerdata = vcat(dockerdata,data)
 		end
 	end
-	buffer = filter(buffer) do x
-		x!=" "
-	end
-	buffer = replace(buffer," ","")
-	return buffer
+	return dockerdata
 end
 
 
@@ -190,6 +184,14 @@ function dockerstat(metrics::String,cid::String)
 	end
 	return execute_cmd(cmd)
 end
+
+
+#TODO: REMOVE THIS FUNCTION!!!!
+function dockerstat(metric::String, cid::String)
+    h=["CONTAINER           CPU %               MEM USAGE / LIMIT      MEM %               NET I/O             BLOCK I/O           PIDS";
+"2c181b4125c0        0.00%               93.8 MiB / 1.907 GiB   4.80%               6.97 kB / 5.54 kB   0 B / 0 B           "*cid]
+end     
+
 
 function test_docker_backend()
 	println("\n\n== TEST > creating and removing 3 containers")

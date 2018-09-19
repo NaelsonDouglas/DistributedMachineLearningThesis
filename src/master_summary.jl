@@ -8,6 +8,7 @@ using DataFrames
 include("datasets.jl")
 include("statistics.jl")
 include("results_handler.jl")
+include("docker/DockerizedJuliaWorker.jl")
 
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
@@ -175,8 +176,33 @@ function create_neighborhoods(histograms)
     return neigh
 end
 
+
+
 function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
+    info("_______________________________")
+    warn("Dont forget to delete the 'dockerstat' mock function writen in  Dockerbackend.jl and use the real 'dockerstat")
+    info("_______________________________")
+
     
+    #keep_analysing_conts = false
+    @async begin    
+        g = open("results/executing/containers.csv","w+")
+        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS"    
+        write(g,header)
+        while(true)               
+            sleep(5)            
+            for a in analyse_containers()
+                write(g,"\n")
+                write(g,a)
+            end 
+                            
+            flush(g) #TODO move this command out of the loop to avoid I/O. I'm keeping it inside by now for test purposes       
+        end
+        close(g)
+    end
+
+
+
     tic() #<-----elapsed_time
     Logging.configure(level=INFO)
     
