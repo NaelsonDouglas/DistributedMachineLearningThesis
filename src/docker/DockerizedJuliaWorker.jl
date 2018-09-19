@@ -7,6 +7,24 @@ In a nutshell, it creates a Docker container and deloys a Julia worker on it.
 =#
 include("DockerBackend.jl")
 
+cids_pids_map = Dict()
+
+function update_maps(new_maping::Dict)
+	merge!(cids_pids_map,new_maping)
+end
+
+function workerstat(pid::Int)
+	if pid>0
+		try
+			return cids_pids_map[pid]
+		catch
+			info("There's no worker with the pid $pid")
+		end
+	else
+		return cids_pids_map
+	end
+	
+end
 "Run Docker container(s) and use them to deploy Julia Worker(s).
 If successful, return the list of the deployed Worker(s), otherwise
 `exit(1)` Julia."
@@ -18,8 +36,10 @@ function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 	juliabin = "/root/julia/bin/julia"
 
 	info("Deploying Docker $nofworkers container(s) and initialize their SSH daemon...")
+	new_cids = Vector()
 	for n in 1:nofworkers
 		cid = dockerrun(img,params,nofcpus,memlimit)
+		push!(new_cids,cid)
 		if ! sshup(cid)
 			error("Could NOT init SSH at container $cid. Exiting Julia...")
 			exit(1)
@@ -46,6 +66,9 @@ function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 		exit(1)
 	end
 	info("List of deployed workers is: \n$pids")
+	new_maped_ids = Dict(zip(pids,new_cids))
+	println(new_maped_ids)
+	update_maps(new_maped_ids)
 	return pids
 end
 
