@@ -30,7 +30,7 @@ function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 	#img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
 	ssh_key=homedir()*"/.ssh/id_rsa"
 	juliabin = "/root/julia/bin/julia"
-	pids = Vector{Int}()
+	pids = Vector()
 
 	info("Deploying Docker $nofworkers container(s) and initialize their SSH daemon...")
 	for n in 1:nofworkers
@@ -45,14 +45,15 @@ function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 		ip = get_containerip(cid)[1]
 		info("Containers' IP address is $ip")
 
-		info("Creating Worker(s) #$n through SSH...")
+		info("Creating Worker(s) #$(n) through SSH...")
+		pid = -1
 		try
 			pid = addprocs(
-				ip,
+				[ip],
 				sshflags=`-i $ssh_key -o "StrictHostKeyChecking no"`,
 				exename="$juliabin")
 		catch
-			error("Could NOT create Worker #$n! \n
+			error("Could NOT create Worker #$(n)! \n
 				Worker(s)' IP addresses: $ip \n
 				Exiting Julia...")
 			exit(1)
@@ -61,7 +62,7 @@ function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 
 		push!(pids, pid)
 		new_maped_pid = Dict(pid => cid)
-		merge!(global cids_pids_map, new_maped_pid)
+		merge!(cids_pids_map, new_maped_pid)
 	end # loop
 
 	return pids
@@ -78,4 +79,8 @@ end
 function rmdockerworkers()
 	error("TODO not implemented!")
 	#TODO Naelson
+end
+
+function test_dockerworker()
+	#TODO Andre
 end
