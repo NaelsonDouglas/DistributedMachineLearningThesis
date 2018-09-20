@@ -24,8 +24,8 @@ end
 "Run Docker container(s) and use them to deploy Julia Worker(s).
 If successful, return the list of the deployed Worker(s), otherwise
 `exit(1)` Julia."
-function adddockerworkers(nofworkers::Int;img="dmlt", params="-tid",
-							nofcpus=1, memlimit=2048, prototype::Bool=false)
+function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
+							_nofcpus=1, _memlimit=2048, _prototype::Bool=false)
 	#nofworkers=1
 	#img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
 	ssh_key=homedir()*"/.ssh/id_rsa"
@@ -35,8 +35,8 @@ function adddockerworkers(nofworkers::Int;img="dmlt", params="-tid",
 	info("Deploying Docker $nofworkers container(s) and initialize their SSH daemon...")
 	for n in 1:nofworkers
 		#TODO Andre params = params * " -v $HOME/results-$RANDOM:/DistributedMachineLearningThesis/src/results "
-		cid = dockerrun(img=img,params=params,nofcpus=nofcpus,
-						memlimit=memlimit,protptype=prototype)
+		cid = dockerrun(img=_img,params=_params,nofcpus=_nofcpus,
+						memlimit=_memlimit,protptype=_prototype)
 		if ! sshup(cid)
 			error("Could NOT init SSH at container $cid. Exiting Julia...")
 			exit(1)

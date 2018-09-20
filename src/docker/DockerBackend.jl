@@ -32,8 +32,7 @@ function docker_pull(img="hello-world")
 end
 
 "Run a container by using the given parameters. Return the container ID or `false` if not sucessful."
-function dockerrun(;img="dmlt", params="-tid", nofcpus=1, memlimit=2048
-					prototype::Bool=false)
+function dockerrun(;img="dmlt", params="-tid", nofcpus=1, memlimit=2048, prototype::Bool=false)
 	#TODO param --cpuset-cpus : CPUs in which to allow execution (0-3, 0,1)
 	memlimit = memlimit * 10^6 # converting mem to MB
 	cmd = Cmd()
