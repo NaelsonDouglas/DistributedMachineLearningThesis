@@ -2,6 +2,7 @@ listof_containers = []
 juliabin = "/opt/julia/bin/julia"
 img="dmlt" #BUGFIX Atom: to let Atom include this file
 
+#TODO replace it by readstring(..)
 "Execute the command `cmd` and return the output."
 function execute_cmd(cmd::Cmd)
 	tempfile = "$(randstring(20)).tmp"
@@ -31,10 +32,19 @@ function docker_pull(img="hello-world")
 end
 
 "Run a container by using the given parameters. Return the container ID or `false` if not sucessful."
-function dockerrun(img="dmlt", params="-tid", nofcpus=1, memlimit=2048)
+function dockerrun(;img="dmlt", params="-tid", nofcpus=1, memlimit=2048
+					prototype::Bool=false)
 	#TODO param --cpuset-cpus : CPUs in which to allow execution (0-3, 0,1)
 	memlimit = memlimit * 10^6 # converting mem to MB
-	cmd = Cmd(`docker run $params --cpus $nofcpus -m $memlimit $img`)
+	cmd = Cmd()
+	if prototype
+		cmd = Cmd(`docker run $params
+			-v ~/results-111111111:/DistributedMachineLearningThesis/src/results
+			--cpus $nofcpus -m $memlimit $img`) #TODO Dates.now(...)
+	else
+		cmd = Cmd(`docker run $params --cpus $nofcpus -m $memlimit $img`)
+	end
+
 	try
 		o = execute_cmd(cmd)
 		cid = o[1]
@@ -129,7 +139,7 @@ function filter_result(dockerstat_output;lines="all")
 	data = dockerstat_output[2]
 
 	header = filterline(header)
-	data = filterline(data)	
+	data = filterline(data)
 
 	if (lines == "all")
 		return vcat(vectortocsv(header),vectortocsv(data))
@@ -190,7 +200,7 @@ end
 function dockerstat(metric::String, cid::String)
     h=["CONTAINER           CPU %               MEM USAGE / LIMIT      MEM %               NET I/O             BLOCK I/O           PIDS";
 "2c181b4125c0        0.00%               93.8 MiB / 1.907 GiB   4.80%               6.97 kB / 5.54 kB   0 B / 0 B           "*cid]
-end     
+end
 =#
 
 function test_docker_backend()
