@@ -45,7 +45,7 @@ function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 		ip = get_containerip(cid)[1]
 		info("Containers' IP address is $ip")
 
-		info("Creating Worker(s) #$(n) through SSH...")
+		info("Creating $n-th Worker(s) through SSH...")
 		pid = -1
 		try
 			pid = addprocs(
@@ -53,7 +53,7 @@ function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 				sshflags=`-i $ssh_key -o "StrictHostKeyChecking no"`,
 				exename="$juliabin")
 		catch
-			error("Could NOT create Worker #$(n)! \n
+			error("Could NOT create $n-th Worker! \n
 				Worker(s)' IP addresses: $ip \n
 				Exiting Julia...")
 			exit(1)
