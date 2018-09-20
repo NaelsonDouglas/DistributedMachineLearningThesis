@@ -9,10 +9,6 @@ include("DockerBackend.jl")
 
 cids_pids_map = Dict()
 
-function update_maps(new_maping::Dict)
-	merge!(cids_pids_map,new_maping)
-end
-
 function workerstat(pid::Int)
 	if pid>0
 		try
@@ -23,7 +19,7 @@ function workerstat(pid::Int)
 	else
 		return cids_pids_map
 	end
-	
+
 end
 "Run Docker container(s) and use them to deploy Julia Worker(s).
 If successful, return the list of the deployed Worker(s), otherwise
@@ -34,41 +30,40 @@ function adddockerworkers(nofworkers::Int,img="dmlt", params="-tid",
 	#img="dmlt"; params="-tid"; nofcpus=1; memlimit=2000
 	ssh_key=homedir()*"/.ssh/id_rsa"
 	juliabin = "/root/julia/bin/julia"
+	pids = Vector{Int}()
 
 	info("Deploying Docker $nofworkers container(s) and initialize their SSH daemon...")
-	new_cids = Vector()
 	for n in 1:nofworkers
+		#TODO Andre params = params * " -v $HOME/results-$RANDOM:/DistributedMachineLearningThesis/src/results "
 		cid = dockerrun(img,params,nofcpus,memlimit)
-		push!(new_cids,cid)
 		if ! sshup(cid)
 			error("Could NOT init SSH at container $cid. Exiting Julia...")
 			exit(1)
 		end
-	end
 
-	info("Getting containers' IP addresses...")
-	ips = []
-	for cid in listof_containers
-		push!(ips, get_containerip(cid)[1])
-	end
+		info("Getting containers' IP address(es)...")
+		ip = get_containerip(cid)[1]
+		info("Containers' IP address is $ip")
 
-	info("Creating $nofworkers Worker(s) through SSH...")
-	pids=String[]
-	try
-		pids = addprocs(
-			ips,
-			sshflags=`-i $ssh_key -o "StrictHostKeyChecking no"`,
-			exename="$juliabin")
-	catch
-		error("Could NOT create $nofworkers Worker(s)! \n
-			Worker(s)' IP addresses: $ips \n
-			Exiting Julia...")
-		exit(1)
-	end
-	info("List of deployed workers is: \n$pids")
-	new_maped_ids = Dict(zip(pids,new_cids))
-	println(new_maped_ids)
-	update_maps(new_maped_ids)
+		info("Creating Worker(s) #$n through SSH...")
+		try
+			pid = addprocs(
+				ip,
+				sshflags=`-i $ssh_key -o "StrictHostKeyChecking no"`,
+				exename="$juliabin")
+		catch
+			error("Could NOT create Worker #$n! \n
+				Worker(s)' IP addresses: $ip \n
+				Exiting Julia...")
+			exit(1)
+		end
+		info("Deployed workers ID is: $pid")
+
+		push!(pids, pid)
+		new_maped_pid = Dict(pid => cid)
+		merge!(global cids_pids_map, new_maped_pid)
+	end # loop
+
 	return pids
 end
 
@@ -76,4 +71,11 @@ end
 function rmalldockerworkers()
 	rmprocs(workers())
 	dockerrm_all()
+	#TODO Naelson: remove from the cids_pids_map
+end
+
+"Removes a specific Dockerized Worker and its respective deployed container."
+function rmdockerworkers()
+	error("TODO not implemented!")
+	#TODO Naelson
 end
