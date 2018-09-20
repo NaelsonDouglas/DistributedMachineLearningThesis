@@ -35,10 +35,10 @@ end
 function dockerrun(;img="dmlt", params="-tid", nofcpus=1, memlimit=2048, prototype::Bool=false)
 	#TODO param --cpuset-cpus : CPUs in which to allow execution (0-3, 0,1)
 	memlimit = memlimit * 10^6 # converting mem to MB
-	cmd = Cmd()
+	cmd = ``
 	if prototype
 		cmd = Cmd(`docker run $params
-			-v ~/results-111111111:/DistributedMachineLearningThesis/src/results
+			-v /tmp/results-111111111:/DistributedMachineLearningThesis/src/results
 			--cpus $nofcpus -m $memlimit $img`) #TODO Dates.now(...)
 	else
 		cmd = Cmd(`docker run $params --cpus $nofcpus -m $memlimit $img`)

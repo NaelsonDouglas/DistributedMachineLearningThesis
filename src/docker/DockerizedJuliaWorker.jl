@@ -36,7 +36,7 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
 	for n in 1:nofworkers
 		#TODO Andre params = params * " -v $HOME/results-$RANDOM:/DistributedMachineLearningThesis/src/results "
 		cid = dockerrun(img=_img,params=_params,nofcpus=_nofcpus,
-						memlimit=_memlimit,protptype=_prototype)
+						memlimit=_memlimit,prototype=_prototype)
 		if ! sshup(cid)
 			error("Could NOT init SSH at container $cid. Exiting Julia...")
 			exit(1)
