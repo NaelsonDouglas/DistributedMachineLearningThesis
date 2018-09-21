@@ -269,17 +269,18 @@ end
 
     exectime = toc()
     exectime = floor(exectime,2)
-    f2 = open(".")
+   
+    f = open(".")
     try
-        f2 = open(string("./results/executing/train_local_model/","temp_",id,".csv"),"a+")
+        f = open(string("./results/executing/train_local_model/","temp_",id,".csv"),"a+")
     catch        
         mkpath("./results/executing/train_local_model/")
-        f2 = open(string("./results/executing/train_local_model/","temp_",id,".csv"),"a+")
+        f = open(string("./results/executing/train_local_model/","temp_",id,".csv"),"a+")
     end
 
-    write(f2,string(exectime))
-    flush(f2)
-    close(f2)
+    write(f,string(exectime))
+    flush(f)
+    close(f)
 
     return output
 end
@@ -355,7 +356,7 @@ end
     exectime = toc()
     exectime = floor(exectime,2)
 
-    2 = open(".")
+    f2 = open(".")
     try
         f2 = open(string("./results/executing/train_global_model/","temp_",id,".csv"),"a+")
     catch        
