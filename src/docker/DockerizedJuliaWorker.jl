@@ -36,7 +36,7 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
 	for n in 1:nofworkers
 		#TODO Andre params = params * " -v $HOME/results-$RANDOM:/DistributedMachineLearningThesis/src/results "
 		cid = dockerrun(img=_img,params=_params,nofcpus=_nofcpus,
-						memlimit=_memlimit,protptype=_prototype)
+						memlimit=_memlimit,prototype=_prototype)
 		if ! sshup(cid)
 			error("Could NOT init SSH at container $cid. Exiting Julia...")
 			exit(1)
@@ -62,24 +62,32 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
 		info("Deployed workers ID is: $pid")
 
 		push!(pids, pid)
-		new_maped_pid = Dict(pid => cid)
+		new_maped_pid = Dict(pid[1] => cid)
 		merge!(cids_pids_map, new_maped_pid)
 	end # loop
 
 	return pids
 end
 
-"Removes all workers and all deployed containers."
-function rmalldockerworkers()
-	rmprocs(workers())
-	dockerrm_all()
-	#TODO Naelson: remove from the cids_pids_map
+"Removes a specififc Dockerized Worker and its respective deployed container."
+function rmdockerworkers(pids::Union{Int,Vector{Int}})
+	try
+		for p in pids
+			rmprocs(p)
+			dockerrm(cids_pids_map[p])
+			delete!(cids_pids_map,p)
+		end
+	catch
+			warn("There's no process with id $pid")
+	end	
+	return workers()	
 end
 
-"Removes a specific Dockerized Worker and its respective deployed container."
-function rmdockerworkers()
-	error("TODO not implemented!")
-	#TODO Naelson
+"Removes all workers and all deployed containers."
+function rmalldockerworkers()
+	rmdockerworkers(workers())
+	dockerrm_all()
+	
 end
 
 function test_dockerworker()
