@@ -19,6 +19,8 @@ for i=1:10; @show @fetch myid(); end
 rmalldockerworkers() #remove all workers and containers
 ```
 
+If set true, the `DockerBackend.jl` `prototype` parameter mounts the `../src/results` container directory to the host `/tmp/results/` directory.
+
 #TODO
 
 * Support Julia 1.0

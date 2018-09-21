@@ -31,11 +31,11 @@ try
 
     mkpath(EXECUTING_PATH*"train_global_model")
     mkpath(EXECUTING_PATH*"calculate_maxmin")
-    mkpath(EXECUTING_PATH*"train_local_model") 
-catch  
+    mkpath(EXECUTING_PATH*"train_local_model")
+catch
     mkpath(EXECUTING_PATH*"train_global_model")
     mkpath(EXECUTING_PATH*"calculate_maxmin")
-    mkpath(EXECUTING_PATH*"train_local_model") 
+    mkpath(EXECUTING_PATH*"train_local_model")
 end
 
 function create_neighborhoods_stats(stats, tolerance=0.05)
@@ -183,20 +183,20 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     warn("Dont forget to delete the 'dockerstat' mock function writen in  Dockerbackend.jl and use the real 'dockerstat")
     info("_______________________________")
 
-    
+
     #keep_analysing_conts = false
-    @async begin    
+    @async begin
         g = open("results/executing/containers.csv","w+")
-        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS"    
+        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS"
         write(g,header)
-        while(true)               
-            sleep(5)            
+        while(true)
+            sleep(5)
             for a in analyse_containers()
                 write(g,"\n")
                 write(g,a)
-            end 
-                            
-            flush(g) #TODO move this command out of the loop to avoid I/O. I'm keeping it inside by now for test purposes       
+            end
+
+            flush(g) #TODO move this command out of the loop to avoid I/O. I'm keeping it inside by now for test purposes
         end
         close(g)
     end
@@ -205,9 +205,9 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     tic() #<-----elapsed_time
     Logging.configure(level=INFO)
-    
+
     info("Adding ", nofworkers, " workers...\n")
-    adddockerworkers(nofworkers)
+    adddockerworkers(nofworkers,_prototype=true)
     #addprocs(nofworkers)
     #workers
 
@@ -226,7 +226,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
             remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim)
             # Naelson: START Maximum and Minimum Time Measure!!!!!
 
-            #DONE --- inside calculate_maxmin 
+            #DONE --- inside calculate_maxmin
             nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)
             # Naelson: STOP Maximum and Minimum Time Measure!!!!!
         end
@@ -237,7 +237,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     store_masterlog(master_maxmim_time, string("calculate_maxmin/","temp_",myid()),"calculate_maxmin_seconds")
     info("\n Merged maxmim logs")
     mergelogs("calculate_maxmin")
-    
+
 
 
 
@@ -251,7 +251,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     # Naelson: START Histogram Creation Share Time!!!!!
 
 
-    
+
     tic()#Histogram time
     nodes_stats = Array{Any}(nofworkers)
     @sync for (idx, pid) in enumerate(workers())
@@ -259,24 +259,24 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
     end
     #DONE
-    # Naelson: STOP Histogram Creation Share Time!!!!! 
+    # Naelson: STOP Histogram Creation Share Time!!!!!
     histogram_create_time = toc()#Histogram time
-    histogram_create_time = floor(histogram_create_time,2)    
+    histogram_create_time = floor(histogram_create_time,2)
     store_masterlog(histogram_create_time, "histogram_create_time","create_histogram_seconds",nofworkers)
 
-     
+
     create_neighborhoods_stats_kmeans_time = 0
     tic() #Local models
     @sync begin
         info("Training local models\n")
 
-        
+
         for (idx, pid) in enumerate(workers())
-            # Naelson: START Local Training Time!!!!!           
+            # Naelson: START Local Training Time!!!!!
             @async remotecall_fetch(train_local_model, pid)
             # Naelson: STOP Local Training Time!!!!!
         end
-        
+
 
         info("Calculating neighborhoods...\n")
 
@@ -295,7 +295,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     local_training_time = toc() #Local models
     local_training_time = floor(local_training_time,2)
     store_masterlog(local_training_time, string("train_local_model/","temp_",myid()),"local_training_seconds")
-    info("\n Merged train local model logs")        
+    info("\n Merged train local model logs")
     mergelogs("train_local_model")
 
     tic()  #Clustering/Neighborhood (part 2)
@@ -314,17 +314,17 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         end
     end
     print(nodes_neighbors)
-    
+
     # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
 
     info("Done generating neighborhoods for every node")
-    
+
     #Clustering/Neighborhood (part 2) //end
     clustering_time = toc() + create_neighborhoods_stats_kmeans_time
     clustering_time = floor(clustering_time,2)
-    
+
     store_masterlog(clustering_time,"clustering_time","clustering_time_seconds",nofworkers)
-    
+
 
 
     # Naelson: START Train Global Model Time!!!!!
@@ -342,19 +342,19 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     # Naelson: STOP Train Global Model Time!!!!!
 
 
-    
+
     train_global_model_time = toc()
     train_global_model_time = floor(train_global_model_time ,2)
-    
+
     store_masterlog(train_global_model_time,string("train_global_model/","temp_",myid(),".csv"),"train_global_model_seconds")
-    info("\n Merged train global model logs")    
+    info("\n Merged train global model logs")
     mergelogs("train_global_model")
-    
+
     # Naelson: START Testing Model Time!!!!!
     #Done
-    tic() #Testing Model   
+    tic() #Testing Model
     info("Done training global model")
-    
+
 
     nodes_outputdata = Array{Any}(nofworkers)
     @sync begin
@@ -381,61 +381,61 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     testing_model_time = floor(testing_model_time,2)
     store_masterlog(testing_model_time,"testing_model_time","testing_model_seconds",nofworkers)
 
-    
-     #TODO CALCULAR ISSO ---- O MOCHA USA ESSA VARIÁVEL, POR ISSO ESTOU HARDCODANDO 
+
+     #TODO CALCULAR ISSO ---- O MOCHA USA ESSA VARIÁVEL, POR ISSO ESTOU HARDCODANDO
    elapsed_time = toc()
    elapsed_time = floor(elapsed_time,2)
    store_masterlog(elapsed_time,"elapsed_time","elapsed_time_seconds",nofworkers)
-   
+
 
     errors=[]
-    
+
     putheader("mse","MSE\n0") #The header nd a zero for the master line
     for i in 1:nofworkers
         mse =  MSE(data_final[i], nodes_outputdata[i])
         push!(errors,mse)
-        store_masterlog(mse,"mse")        
+        store_masterlog(mse,"mse")
 
         if (i!= nofworkers)
             store_masterlog("\n","mse")
         end
     end
-    
+
 
     println(errors)
     errors2=[]
 
     putheader("mape","MAPE\n0")
-    
+
     for i in 1:nofworkers
         mape = MAPE(transpose(data_final[i]), nodes_outputdata[i])
         push!(errors2, mape)
         store_masterlog(mape,"mape")
-        
+
         if (i!= nofworkers)
             store_masterlog("\n","mape")
         end
     end
-    
+
 
     println(errors2)
     errors3=[]
 
-    
+
     putheader("r2","R2\n0")
     for i in 1:nofworkers
         r2 = R2(transpose(data_final[i]), nodes_outputdata[i])
         push!(errors3, r2)
-        store_masterlog(r2,"r2")                
+        store_masterlog(r2,"r2")
         if (i!= nofworkers)
             store_masterlog("\n","r2")
         end
     end
-    
 
-    
+
+
     println(errors3)
-    
+
     archivo=string(func)*"-"*string(nofworkers)*"-"*string(nofexamples)*"_"*string(num_nodes)*"_"*string(dim)*"_MSE_summary.txt"
     open("results"*"/"*archivo, "a") do f
         write(f, join(map(x->string(x),errors),",")*"\n")
@@ -460,7 +460,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     println("Number of nodes:")
     println(length(counts(neighborhoods)))
     println(nodes_neighbors)
-    
+
 end
 
 
@@ -469,13 +469,13 @@ function execute_experiment()
     # params checking
     # params order N_LOCAL, N_EXAMPLES, FUNCION, SEED, N_CLUSTER, DIM
 
-    
+
     if length(ARGS) < 3
         error("You need to specify the number of procs to use or data examples per node!")
         quit()
     end
     #for x in ARGS
-    #   println(x)  
+    #   println(x)
     #end
     # Saving position and distributions of nodes, this can be done separately
     seed = 1234
@@ -496,15 +496,15 @@ function execute_experiment()
         end
     else
         run_experiments(n_of_procs, n_of_examples, funcion)
-    end 
-    
+    end
+
     commit = readstring(`git log --pretty=format:'%h' -n 1`)
 
 
     experiment_dir = commit*"-"*start_time*"-"*string(seed)
     results_folder = "./results/"*experiment_dir
 
-    
+
     mv(EXECUTING_PATH,results_folder)
     info("Results moved into the folder: "*results_folder*"\n")
     generatetable(experiment_dir)

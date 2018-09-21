@@ -23,7 +23,7 @@ function workerstat(pid::Int)
 end
 "Run Docker container(s) and use them to deploy Julia Worker(s).
 If successful, return the list of the deployed Worker(s), otherwise
-`exit(1)` Julia."
+`exit(1)` from Julia."
 function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
 							_nofcpus=1, _memlimit=2048, _prototype::Bool=false)
 	#nofworkers=1
@@ -34,7 +34,6 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
 
 	info("Deploying Docker $nofworkers container(s) and initialize their SSH daemon...")
 	for n in 1:nofworkers
-		#TODO Andre params = params * " -v $HOME/results-$RANDOM:/DistributedMachineLearningThesis/src/results "
 		cid = dockerrun(img=_img,params=_params,nofcpus=_nofcpus,
 						memlimit=_memlimit,prototype=_prototype)
 		if ! sshup(cid)
@@ -79,15 +78,14 @@ function rmdockerworkers(pids::Union{Int,Vector{Int}})
 		end
 	catch
 			warn("There's no process with id $pid")
-	end	
-	return workers()	
+	end
+	return workers()
 end
 
 "Removes all workers and all deployed containers."
 function rmalldockerworkers()
 	rmdockerworkers(workers())
 	dockerrm_all()
-	
 end
 
 function test_dockerworker()

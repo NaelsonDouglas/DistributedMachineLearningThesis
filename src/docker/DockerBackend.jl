@@ -31,7 +31,10 @@ function docker_pull(img="hello-world")
 	end
 end
 
-"Run a container by using the given parameters. Return the container ID or `false` if not sucessful."
+"Run a container by using the given parameters.
+Return the container ID or `false` if not sucessful.
+If set true, the `DockerBackend.jl` `prototype` parameter mounts the
+`../src/results` container directory to the host `/tmp/results/` directory."
 function dockerrun(;img="dmlt", params="-tid", nofcpus=1, memlimit=2048, prototype::Bool=false)
 	#TODO param --cpuset-cpus : CPUs in which to allow execution (0-3, 0,1)
 	memlimit = memlimit * 10^6 # converting mem to MB
