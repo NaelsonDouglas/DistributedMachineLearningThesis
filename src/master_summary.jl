@@ -515,6 +515,7 @@ function execute_experiment()
     mv(EXECUTING_PATH,results_folder)
     info("Results moved into the folder: "*results_folder*"\n")
     generatetable(experiment_dir)
+    rmalldockerworkers()
 end
 
 function final_output(secondleveldatatotal, site, globalmodels, neighborhoods, examples)
