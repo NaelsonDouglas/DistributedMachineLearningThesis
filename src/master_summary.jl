@@ -507,7 +507,7 @@ function execute_experiment()
     g = open("results/executing/containers.csv","a+")
     for a in analyse_containers()
           write(g,"\n")
-          write(g,a*start_time*" [FINAL]")
+          write(g,a*start_time[10:length(stat_time)]*" [FINAL]") #The iteration inside start_time is to remove the days/month/year. There's probably a better way to do it
      end 
      flush(g)
      close(g)
