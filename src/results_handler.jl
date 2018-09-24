@@ -6,7 +6,12 @@
 "
 function vectortocsv(vector)
     buffer = ""
-    for i in vector
+
+    container = vector[1]
+    pids_cids_map = Dict(zip(collect(values(cids_pids_map)),collect(keys(cids_pids_map))))
+   _vector = vcat(vector[1:6],string(pids_cids_map[container] ),vector[7:length(vector)])
+
+    for i in _vector
         if (buffer != "")
             buffer = buffer*","*i
         else
@@ -16,7 +21,7 @@ function vectortocsv(vector)
     buffer = filter(buffer) do x
         x!=" "
     end
-    buffer = replace(buffer," ","")
+    buffer = replace(buffer," ","")    
     return buffer
 end
 

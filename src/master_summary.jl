@@ -186,7 +186,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     #keep_analysing_conts = false
     @async begin
         g = open("results/executing/containers.csv","w+")
-        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS,TIMESTAMP"
+        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS_JULIA,PIDS_DOCKER,TIMESTAMP"
         write(g,header)
         while(true)
             sleep(5)
