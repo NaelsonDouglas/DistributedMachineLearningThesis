@@ -183,17 +183,20 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     warn("Dont forget to delete the 'dockerstat' mock function writen in  Dockerbackend.jl and use the real 'dockerstat")
     info("_______________________________")
 
+    info("Adding ", nofworkers, " workers...\n")
+    adddockerworkers(nofworkers,_prototype=true)
 
     #keep_analysing_conts = false
     @async begin
         g = open("results/executing/containers.csv","w+")
-        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS"
+        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS,TIMESTAMP"
         write(g,header)
         while(true)
             sleep(5)
+	    timestamp = start_time = string(Dates.format(Dates.now(),"HH:MM:SS"))
             for a in analyse_containers()
                 write(g,"\n")
-                write(g,a)
+                write(g,a*","*timestamp)
             end
 
             flush(g) #TODO move this command out of the loop to avoid I/O. I'm keeping it inside by now for test purposes
@@ -206,8 +209,6 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     tic() #<-----elapsed_time
     Logging.configure(level=INFO)
 
-    info("Adding ", nofworkers, " workers...\n")
-    adddockerworkers(nofworkers,_prototype=true)
     #addprocs(nofworkers)
     #workers
 
