@@ -179,9 +179,6 @@ end
 
 
 function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
-    info("_______________________________")
-    warn("Dont forget to delete the 'dockerstat' mock function writen in  Dockerbackend.jl and use the real 'dockerstat")
-    info("_______________________________")
 
     info("Adding ", nofworkers, " workers...\n")
     adddockerworkers(nofworkers,_prototype=true)
@@ -223,12 +220,12 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     tic() #Master maxmim
     @sync for (idx, pid) in enumerate(workers())
         @async begin
-            metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim)
-            remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim)
+            metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim);
+            remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim);
             # Naelson: START Maximum and Minimum Time Measure!!!!!
 
             #DONE --- inside calculate_maxmin
-            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)
+            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid);
             # Naelson: STOP Maximum and Minimum Time Measure!!!!!
         end
     end
@@ -256,8 +253,8 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     tic()#Histogram time
     nodes_stats = Array{Any}(nofworkers)
     @sync for (idx, pid) in enumerate(workers())
-        #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics)
-        @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
+        #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics);
+        @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:];
     end
     #DONE
     # Naelson: STOP Histogram Creation Share Time!!!!!
@@ -274,7 +271,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
         for (idx, pid) in enumerate(workers())
             # Naelson: START Local Training Time!!!!!
-            @async remotecall_fetch(train_local_model, pid)
+            @async remotecall_fetch(train_local_model, pid);
             # Naelson: STOP Local Training Time!!!!!
         end
 
@@ -336,7 +333,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     @sync begin
         info("Training global model")
         for (idx, pid) in enumerate(workers())
-            @async nodes_global_models[idx] = remotecall_fetch(train_global_model, pid, nodes_neighbors[idx])
+            @async nodes_global_models[idx] = remotecall_fetch(train_global_model, pid, nodes_neighbors[idx]);
         end
     end
     #Done inside the function train_global_model
@@ -360,14 +357,14 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     nodes_outputdata = Array{Any}(nofworkers)
     @sync begin
         for (idx, pid) in enumerate(workers())
-            @async nodes_outputdata[idx] = remotecall_fetch(get_output_data, pid)
+            @async nodes_outputdata[idx] = remotecall_fetch(get_output_data, pid);
         end
     end
 
     nodes_test_data_evaluated = Array{Any}(nofworkers)
     @sync begin
         for (idx, pid) in enumerate(workers())
-            @async nodes_test_data_evaluated[idx] =  remotecall_fetch(evaluate_test_data_with_local_models, pid, nofworkers, examples)
+            @async nodes_test_data_evaluated[idx] =  remotecall_fetch(evaluate_test_data_with_local_models, pid, nofworkers, examples);
         end
     end
 
@@ -506,6 +503,15 @@ function execute_experiment()
     results_folder = "./results/"*experiment_dir
 
 
+
+    g = open("results/executing/containers.csv","a+")
+    for a in analyse_containers()
+          write(g,"\n")
+          write(g,a*start_time*" [FINAL]")
+     end 
+     flush(g)
+     close(g)
+      
     mv(EXECUTING_PATH,results_folder)
     info("Results moved into the folder: "*results_folder*"\n")
     generatetable(experiment_dir)
