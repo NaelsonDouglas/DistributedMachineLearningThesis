@@ -1,5 +1,4 @@
 listof_containers = []
-juliabin = "/opt/julia/bin/julia"
 img="dmlt" #BUGFIX Atom: to let Atom include this file
 
 #TODO replace it by readstring(..)
@@ -88,7 +87,7 @@ end
 
 "Execute a Julia `expr` on container `cid`. Return `ERROR` if not sucessfull."
 function execute_julia_expr(expr::String,cid::String)
-	cmd = Cmd(`docker exec $cid $juliabin -E "$expr"`)
+	cmd = Cmd(`docker exec $cid $(JULIA_HOME) -E "$expr"`)
 	try
 		return execute_cmd(cmd)
 	catch
