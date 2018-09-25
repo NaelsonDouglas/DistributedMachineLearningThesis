@@ -469,30 +469,30 @@ end
 
 
 
-function execute_experiment()
+function execute_experiment(args)
     # params checking
     # params order N_LOCAL, N_EXAMPLES, FUNCION, SEED, N_CLUSTER, DIM
 
 
-    if length(ARGS) < 3
+    if length(args) < 3
         error("You need to specify the number of procs to use or data examples per node!")
         quit()
     end
-    #for x in ARGS
+    #for x in args
     #   println(x)
     #end
     # Saving position and distributions of nodes, this can be done separately
     seed = 1234
-    n_of_procs = parse(ARGS[1])
-    n_of_examples = parse(ARGS[2])
-    funcion=ARGS[3]
-    seed = parse(ARGS[4])
+    n_of_procs = parse(args[1])
+    n_of_examples = parse(args[2])
+    funcion=args[3]
+    seed = parse(args[4])
     srand(seed)
-    if length(ARGS) >= 5
-        num_nodes = parse(Int, ARGS[5])
+    if length(args) >= 5
+        num_nodes = parse(Int, args[5])
         println(string(num_nodes))
-        if length(ARGS) >= 6
-            dims = parse(Int, ARGS[6])
+        if length(args) >= 6
+            dims = parse(Int, args[6])
             println(string(dims))
             run_experiments(n_of_procs, n_of_examples, funcion, num_nodes, dims)
         else
