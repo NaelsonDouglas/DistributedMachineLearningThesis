@@ -47,7 +47,6 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",_nofcpus=1
 		info("Getting containers' IP address(es)...")
 		ip = get_containerip(cid)[1]
 		push!(ips,ip)
-		println("DEBUG: type of ip is $(typeof(ip))")
 		info("Containers' IP address is $ip")
 
 		# 4. adding cid to a temporary pid_cid Dict
