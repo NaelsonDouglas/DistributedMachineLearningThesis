@@ -1,14 +1,20 @@
-using Clustering
-using Mocha
-using MultivariateStats
-using JLD
-using Logging
-using CSV
-using DataFrames
-include("datasets.jl")
-include("statistics.jl")
-include("results_handler.jl")
-include("docker/DockerizedJuliaWorker.jl")
+used_packages=[:Clustering,:Mocha,:MultivariateStats,:JLD,:Logging,:CSV,:DataFrames]
+all_package_loaded = contains(==, map(isdefined,used_packages),false)
+
+if !all_package_loaded
+    using Clustering
+    using Mocha
+    using MultivariateStats
+    using JLD
+    using Logging
+    using CSV
+    using DataFrames
+    include("datasets.jl")
+    include("statistics.jl")
+    include("results_handler.jl")
+    include("docker/DockerizedJuliaWorker.jl")
+end
+
 
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
