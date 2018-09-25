@@ -204,7 +204,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
 
-    n_of_procs = parse(ARGS[1])
+    n_of_procs = parse(args[1])
     tic() #Master maxmim
     @sync for (idx, pid) in enumerate(workers())
         @async begin
@@ -474,15 +474,15 @@ function execute_experiment(args)
     # Saving position and distributions of nodes, this can be done separately
     seed = 1234
     n_of_procs = parse(args[1])
-    n_of_examples = parse(z[2])
-    funcion=ARGS[3]
-    seed = parse(ARGS[4])
+    n_of_examples = parse(args[2])
+    funcion=args[3]
+    seed = parse(args[4])
     srand(seed)
-    if length(ARGS) >= 5
-        num_nodes = parse(Int, ARGS[5])
+    if length(args) >= 5
+        num_nodes = parse(Int, args[5])
         println(string(num_nodes))
-        if length(ARGS) >= 6
-            dims = parse(Int, ARGS[6])
+        if length(args) >= 6
+            dims = parse(Int, args[6])
             println(string(dims))
             run_experiments(n_of_procs, n_of_examples, funcion, num_nodes, dims)
         else
