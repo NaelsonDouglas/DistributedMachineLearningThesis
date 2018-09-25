@@ -1,14 +1,20 @@
-using Clustering
-using Mocha
-using MultivariateStats
-using JLD
-using Logging
-using CSV
-using DataFrames
-include("datasets.jl")
-include("statistics.jl")
-include("results_handler.jl")
-include("docker/DockerizedJuliaWorker.jl")
+used_packages=[:Clustering,:Mocha,:MultivariateStats,:JLD,:Logging,:CSV,:DataFrames]
+all_package_loaded = contains(==, map(isdefined,used_packages),false)
+
+if !all_package_loaded
+    using Clustering
+    using Mocha
+    using MultivariateStats
+    using JLD
+    using Logging
+    using CSV
+    using DataFrames
+    include("datasets.jl")
+    include("statistics.jl")
+    include("results_handler.jl")
+    include("docker/DockerizedJuliaWorker.jl")
+end
+
 
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
@@ -179,9 +185,6 @@ end
 
 
 function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
-    info("_______________________________")
-    warn("Dont forget to delete the 'dockerstat' mock function writen in  Dockerbackend.jl and use the real 'dockerstat")
-    info("_______________________________")
 
     info("Adding ", nofworkers, " workers...\n")
     adddockerworkers(nofworkers,_prototype=true)
@@ -189,7 +192,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     #keep_analysing_conts = false
     @async begin
         g = open("results/executing/containers.csv","w+")
-        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS,TIMESTAMP"
+        header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS_JULIA,PIDS_DOCKER,TIMESTAMP"
         write(g,header)
         while(true)
             sleep(5)
@@ -223,12 +226,12 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     tic() #Master maxmim
     @sync for (idx, pid) in enumerate(workers())
         @async begin
-            metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim)
-            remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim)
+            metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), 1000, num_nodes, dim);
+            remotecall_fetch(generate_test_data, pid, eval(parse(func)), 1000, num_nodes, dim);
             # Naelson: START Maximum and Minimum Time Measure!!!!!
 
             #DONE --- inside calculate_maxmin
-            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)
+            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid);
             # Naelson: STOP Maximum and Minimum Time Measure!!!!!
         end
     end
@@ -256,8 +259,8 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     tic()#Histogram time
     nodes_stats = Array{Any}(nofworkers)
     @sync for (idx, pid) in enumerate(workers())
-        #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics)
-        @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:]
+        #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics);
+        @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:];
     end
     #DONE
     # Naelson: STOP Histogram Creation Share Time!!!!!
@@ -274,7 +277,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
         for (idx, pid) in enumerate(workers())
             # Naelson: START Local Training Time!!!!!
-            @async remotecall_fetch(train_local_model, pid)
+            @async remotecall_fetch(train_local_model, pid);
             # Naelson: STOP Local Training Time!!!!!
         end
 
@@ -336,7 +339,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     @sync begin
         info("Training global model")
         for (idx, pid) in enumerate(workers())
-            @async nodes_global_models[idx] = remotecall_fetch(train_global_model, pid, nodes_neighbors[idx])
+            @async nodes_global_models[idx] = remotecall_fetch(train_global_model, pid, nodes_neighbors[idx]);
         end
     end
     #Done inside the function train_global_model
@@ -360,14 +363,14 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     nodes_outputdata = Array{Any}(nofworkers)
     @sync begin
         for (idx, pid) in enumerate(workers())
-            @async nodes_outputdata[idx] = remotecall_fetch(get_output_data, pid)
+            @async nodes_outputdata[idx] = remotecall_fetch(get_output_data, pid);
         end
     end
 
     nodes_test_data_evaluated = Array{Any}(nofworkers)
     @sync begin
         for (idx, pid) in enumerate(workers())
-            @async nodes_test_data_evaluated[idx] =  remotecall_fetch(evaluate_test_data_with_local_models, pid, nofworkers, examples)
+            @async nodes_test_data_evaluated[idx] =  remotecall_fetch(evaluate_test_data_with_local_models, pid, nofworkers, examples);
         end
     end
 
@@ -466,30 +469,30 @@ end
 
 
 
-function execute_experiment()
+function execute_experiment(args)
     # params checking
     # params order N_LOCAL, N_EXAMPLES, FUNCION, SEED, N_CLUSTER, DIM
 
 
-    if length(ARGS) < 3
+    if length(args) < 3
         error("You need to specify the number of procs to use or data examples per node!")
         quit()
     end
-    #for x in ARGS
+    #for x in args
     #   println(x)
     #end
     # Saving position and distributions of nodes, this can be done separately
     seed = 1234
-    n_of_procs = parse(ARGS[1])
-    n_of_examples = parse(ARGS[2])
-    funcion=ARGS[3]
-    seed = parse(ARGS[4])
+    n_of_procs = parse(args[1])
+    n_of_examples = parse(args[2])
+    funcion=args[3]
+    seed = parse(args[4])
     srand(seed)
-    if length(ARGS) >= 5
-        num_nodes = parse(Int, ARGS[5])
+    if length(args) >= 5
+        num_nodes = parse(Int, args[5])
         println(string(num_nodes))
-        if length(ARGS) >= 6
-            dims = parse(Int, ARGS[6])
+        if length(args) >= 6
+            dims = parse(Int, args[6])
             println(string(dims))
             run_experiments(n_of_procs, n_of_examples, funcion, num_nodes, dims)
         else
@@ -506,9 +509,19 @@ function execute_experiment()
     results_folder = "./results/"*experiment_dir
 
 
+
+    g = open("results/executing/containers.csv","a+")
+    for a in analyse_containers()
+          write(g,"\n")
+          write(g,a*","*start_time[10:length(start_time)]*"[FINAL]") #The iteration inside start_time is to remove the days/month/year. There's probably a better way to do it
+     end 
+     flush(g)
+     close(g)
+      
     mv(EXECUTING_PATH,results_folder)
     info("Results moved into the folder: "*results_folder*"\n")
     generatetable(experiment_dir)
+    rmalldockerworkers()
 end
 
 function final_output(secondleveldatatotal, site, globalmodels, neighborhoods, examples)
