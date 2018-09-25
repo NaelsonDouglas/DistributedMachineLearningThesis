@@ -95,7 +95,7 @@ function execute_julia_expr(expr::String,cid::String)
 	end
 end
 
-function get_containerip(cid::String)
+function get_containerip(cid::Union{String,SubString})
 	cmd = Cmd(`docker inspect
 		--format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
 		$cid`)
@@ -181,7 +181,7 @@ end
 .BlockIO    Block IO
 .MemPerc    Memory percentage (Not available on Windows)
 .PIDs       Number of PIDs (Not available on Windows)"
-function dockerstat(metrics::String,cid::String)
+function dockerstat(metrics::String,cid::Union{String,SubString})
 	available_metrics = [".Container", ".Name", ".ID", ".CPUPerc", ".MemUsage",
 		".NetIO", ".BlockIO", ".MemPerc", ".PIDs", "all"]
 	if ! contains(==,available_metrics,metrics)
