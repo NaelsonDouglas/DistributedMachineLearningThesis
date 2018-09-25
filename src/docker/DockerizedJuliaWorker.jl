@@ -97,14 +97,9 @@ end
 function rmdockerworkers(pids::Union{Int,Vector{Int}})
 	try
 		for p in pids
-			println("p is $p")
 			rmprocs(p)
-			println("p is $p")
-			@show cids_pids_map[p]
 			dockerrm(cids_pids_map[p])
-			@show cids_pids_map
 			delete!(cids_pids_map,p)
-			@show cids_pids_map
 		end
 	catch
 		warn("No Dockerized Worker to be deleted!")
@@ -115,7 +110,6 @@ end
 "Removes all workers and all deployed containers."
 function rmalldockerworkers()
 	rmdockerworkers(workers())
-	dockerrm_all()
 end
 
 function test_dockerworker()
