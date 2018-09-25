@@ -51,8 +51,22 @@ From the running container, run the following commands:
 export JULIABIN="/root/julia/bin/julia"
 cd DistributedMachineLearningThesis/src/
 #TODO  git pull to the right tag
-$JULIABIN -L master_summary.jl -e "execute_experiment()" 4 100 f1 1234 4 2 
+julia
+include("call_experiment.jl")
+args =["3", "20", "f1", "1234", "4", "2"]
+experiment(args)
 ```
+
+The 'args' vector is a vector containing
+*  The number of workers
+*  Number of samples
+*  The function name
+*  Seed
+*  n_cluster
+*  dim
+
+You can select different configurations for 'args' and execute it as many times as you want. For a session you need to call include("call_experiments.jl") only once.
+
 In order to run a customized experiment, please read the next Sections.
 
 ## Performance metrics
@@ -72,8 +86,10 @@ This research prototype is assessed by using the following metrics:
 
 The command used to run the prototype includes its parameters as described next.
 
-```bash
-julia -L master_summary.jl -e "execute_experiment()" \
+```julia
+args =["3", "20", "f1", "1234", "4", "2"]
+experiment(args)
+
 TODO review this!
 $n_procs \
 $n_samples \
