@@ -50,8 +50,8 @@ From the running container, run the following commands:
 ```bash
 export JULIABIN="/root/julia/bin/julia"
 cd DistributedMachineLearningThesis/src/
-#TODO  git pull to the right tag
-julia
+git pull #TODO specify the right tag
+$JULIABIN
 include("call_experiment.jl")
 args =["3", "20", "f1", "1234", "4", "2"]
 experiment(args)
