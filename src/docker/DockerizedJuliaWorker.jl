@@ -27,7 +27,7 @@ If successful, return the list of the deployed Worker(s), otherwise
 function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
 							_nofcpus=1, _memlimit=2048, _prototype::Bool=false)
 	ssh_key=homedir()*"/.ssh/id_rsa"
-	juliabin = "/root/julia/bin/julia"
+	juliabin = JULIA_HOME*"/julia"
 	pids = Vector()
 	ips = Vector()
 	pids_cids_map = Dict()
