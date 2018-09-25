@@ -102,6 +102,7 @@ function rmdockerworkers(pids::Union{Int,Vector{Int}})
 			delete!(cids_pids_map,p)
 		end
 	catch
+		stacktrace()
 		warn("No Dockerized Worker to be deleted!")
 	end
 	return workers()

@@ -59,7 +59,7 @@ end
 
 "Remove a Docker container whose ID is `cid`.
 Return `false` if not successful."
-function dockerrm(cid::String)
+function dockerrm(cid::Union{String,SubString})
 	cmd = Cmd(`docker rm -f $cid`)
 	try
 		execute_cmd(cmd)
@@ -86,7 +86,7 @@ function dockerrm_all()
 end
 
 "Execute a Julia `expr` on container `cid`. Return `ERROR` if not sucessfull."
-function execute_julia_expr(expr::String,cid::String)
+function execute_julia_expr(expr::String,cid::Union{String,SubString})
 	cmd = Cmd(`docker exec $cid $(JULIA_HOME) -E "$expr"`)
 	try
 		return execute_cmd(cmd)
@@ -106,7 +106,7 @@ function get_containerip(cid::Union{String,SubString})
 	end
 end
 
-function sshup(cid::String)
+function sshup(cid::Union{String,SubString})
 	cmd = Cmd(`docker exec $cid /usr/sbin/sshd`)
 	try
 		execute_cmd(cmd)
