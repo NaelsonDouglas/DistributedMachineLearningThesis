@@ -447,8 +447,10 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     println(length(counts(neighborhoods)))
     println(nodes_neighbors)
     
-    ex = InterruptException()
-    Base.throwto(cont_daemon, ex)  
+    #ex = InterruptException()
+    try
+        Base.throwto(cont_daemon, InterruptException()) #Kills the daemon task
+    end 
     info("Stoped the container analyser daemon")
 
     rmalldockerworkers()
