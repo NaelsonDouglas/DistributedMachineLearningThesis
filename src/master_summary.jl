@@ -1,21 +1,3 @@
-used_packages=[:Clustering,:Mocha,:MultivariateStats,:JLD,:Logging,:CSV,:DataFrames]
-all_package_loaded = contains(==, map(isdefined,used_packages),false)
-
-if !all_package_loaded
-    using Clustering
-    using Mocha
-    using MultivariateStats
-    using JLD
-    using Logging
-    using CSV
-    using DataFrames
-    include("datasets.jl")
-    include("statistics.jl")
-    include("results_handler.jl")
-    include("docker/DockerizedJuliaWorker.jl")
-end
-
-
 ###
 #  Create the neighborhoods for every node using the histograms of the nodes.
 #  This function doesn't need to be run on every node because the master has all
@@ -190,7 +172,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     adddockerworkers(nofworkers,_prototype=true)
 
     #keep_analysing_conts = false
-    @async begin
+    cont_daemon = @async begin
         g = open("results/executing/containers.csv","w+")
         header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS_JULIA,PIDS_DOCKER,TIMESTAMP"
         write(g,header)
@@ -464,6 +446,14 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     println("Number of nodes:")
     println(length(counts(neighborhoods)))
     println(nodes_neighbors)
+    
+    ex = InterruptException()
+    Base.throwto(cont_daemon, ex)  
+    info("Stoped the container analyser daemon")
+
+    rmalldockerworkers()
+    info("Removed all workers and containers")
+    info("EXPERIMENT INTERACTION COMPLETE")
 
 end
 
@@ -484,15 +474,15 @@ function execute_experiment(args)
     # Saving position and distributions of nodes, this can be done separately
     seed = 1234
     n_of_procs = parse(args[1])
-    n_of_examples = parse(args[2])
-    funcion=args[3]
-    seed = parse(args[4])
+    n_of_examples = parse(z[2])
+    funcion=ARGS[3]
+    seed = parse(ARGS[4])
     srand(seed)
-    if length(args) >= 5
-        num_nodes = parse(Int, args[5])
+    if length(ARGS) >= 5
+        num_nodes = parse(Int, ARGS[5])
         println(string(num_nodes))
-        if length(args) >= 6
-            dims = parse(Int, args[6])
+        if length(ARGS) >= 6
+            dims = parse(Int, ARGS[6])
             println(string(dims))
             run_experiments(n_of_procs, n_of_examples, funcion, num_nodes, dims)
         else
