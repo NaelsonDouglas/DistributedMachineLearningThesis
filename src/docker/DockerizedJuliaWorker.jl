@@ -24,8 +24,8 @@ end
 "Run Docker container(s) and use them to deploy Julia Worker(s).
 If successful, return the list of the deployed Worker(s), otherwise
 `exit(1)` from Julia."
-function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
-							_nofcpus=1, _memlimit=2048, _prototype::Bool=false)
+function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",_nofcpus=1,
+	 			_memlimit=2048, _prototype::Bool=false, grancoloso::Bool=false)
 	ssh_key=homedir()*"/.ssh/id_rsa"
 	juliabin = JULIA_HOME*"/julia"
 	pids = Vector()
@@ -72,12 +72,17 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",
 	for w in workers()
 		cid = -1
 		try
-			cid = remotecall_fetch(readstring,w,pipeline(`head -1 /proc/self/cgroup`,`cut -d/ -f3`))
+			if grancoloso # Workaround to find cid at GranColoso: head -2
+				cid = remotecall_fetch(readstring,w,pipeline(`head -2 /proc/self/cgroup`,`cut -d/ -f3`))
+				cid = cid[2:length(cid)] #removing first \n
+			else
+				cid = remotecall_fetch(readstring,w,pipeline(`head -1 /proc/self/cgroup`,`cut -d/ -f3`))
+			end
 		catch
 			error("Could NOT get container ID by calling Worker $w\nExiting Julia...")
 			exit(1)
 		end
-		cid = chomp(cid)
+		cid = chomp(cid) #removing second \n
 		pids_cids_map[cid] = w # update the k-v to the right value (CID => Worker ID)
 	end
 
@@ -92,12 +97,17 @@ end
 function rmdockerworkers(pids::Union{Int,Vector{Int}})
 	try
 		for p in pids
+			println("p is $p")
 			rmprocs(p)
+			println("p is $p")
+			@show cids_pids_map[p]
 			dockerrm(cids_pids_map[p])
+			@show cids_pids_map
 			delete!(cids_pids_map,p)
+			@show cids_pids_map
 		end
 	catch
-			warn("There's no process with id $pid")
+		warn("No Dockerized Worker to be deleted!")
 	end
 	return workers()
 end
