@@ -14,7 +14,8 @@ function workerstat(pid::Int)
 		try
 			return cids_pids_map[pid]
 		catch
-			info("There's no worker with the pid $pid")
+			info("There's no worker with the pid $pid",
+				stacktrace(), "\n\n", catch_stacktrace())
 		end
 	else
 		return cids_pids_map
@@ -62,7 +63,8 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",_nofcpus=1
 			exename="$juliabin")
 	catch
 		error("Could NOT create $nofworkers Worker(s)!\n
-			Worker(s)' IP addresses: $ips\nExiting Julia...")
+			Worker(s)' IP addresses: $ips\nExiting Julia...",
+			stacktrace(), "\n\n", catch_stacktrace())
 		exit(1)
 	end
 	info("Creating $nofworkers Worker(s) through SSH... DONE.
@@ -79,7 +81,8 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",_nofcpus=1
 				cid = remotecall_fetch(readstring,w,pipeline(`head -1 /proc/self/cgroup`,`cut -d/ -f3`))
 			end
 		catch
-			error("Could NOT get container ID by calling Worker $w\nExiting Julia...")
+			error("Could NOT get container ID by calling Worker $w\nExiting Julia...",
+				stacktrace(), "\n\n", catch_stacktrace())
 			exit(1)
 		end
 		cid = chomp(cid) #removing second \n
@@ -102,8 +105,8 @@ function rmdockerworkers(pids::Union{Int,Vector{Int}})
 			delete!(cids_pids_map,p)
 		end
 	catch
-		stacktrace()
-		warn("No Dockerized Worker to be deleted!")
+		warn("No Dockerized Worker to be deleted!\n\n",
+			stacktrace(), "\n\n", catch_stacktrace())
 	end
 	return workers()
 end

@@ -12,6 +12,7 @@ function execute_cmd(cmd::Cmd)
 		msg = "Could NOT execute command $cmd.
 			See output file $tempfile"
 		error(msg)
+		error("\n\n", stacktrace(), "\n\n", catch_stacktrace())
 		return ["ERROR $msg"]
 	end
 	output = readlines(tempfile)
@@ -26,6 +27,7 @@ function docker_pull(img="hello-world")
 		execute_cmd(cmd)
 		return true
 	catch
+		warn("Could pull image $img!\n\n", stacktrace(), "\n\n", catch_stacktrace())
 		return false
 	end
 end
@@ -53,6 +55,7 @@ function dockerrun(;img="dmlt", params="-tid", nofcpus=1, memlimit=2048, prototy
 		info("Container $cid is up")
 		return cid
 	catch
+		warn("Could NOT execute cmd $cmd!\n\n", stacktrace(), "\n\n", catch_stacktrace())
 		return false
 	end
 end
@@ -67,6 +70,7 @@ function dockerrm(cid::Union{String,SubString})
 		info("Container $cid removed.")
 		return true
 	catch
+		warn("Could remove container $cid!\n\n", stacktrace(), "\n\n", catch_stacktrace())
 		return false
 	end
 end
@@ -76,7 +80,7 @@ Delete all containers deployed by `DockerBackend.jl`.
 "
 function dockerrm_all()
 		if isempty(listof_containers)
-			warn("No container to be deleted!")
+			info("No container to be deleted!")
 			return true
 		end
 		containers = copy(listof_containers)
@@ -91,6 +95,7 @@ function execute_julia_expr(expr::String,cid::Union{String,SubString})
 	try
 		return execute_cmd(cmd)
 	catch
+		warn("Could NOT execute Julia expression!\n\n", stacktrace(), "\n\n", catch_stacktrace())
 		return ["ERROR"]
 	end
 end
@@ -102,6 +107,7 @@ function get_containerip(cid::Union{String,SubString})
 	try
 		return execute_cmd(cmd)
 	catch
+		warn("Could NOT get container IP!\n\n", stacktrace(), "\n\n", catch_stacktrace())
 		return ["ERROR"]
 	end
 end
@@ -112,6 +118,7 @@ function sshup(cid::Union{String,SubString})
 		execute_cmd(cmd)
 		return true
 	catch
+		warn("Could NOT initiate SSH!\n\n", stacktrace(), "\n\n", catch_stacktrace())
 		return false
 	end
 end
@@ -249,7 +256,7 @@ end
 #
 if ! ( is_apple() || is_linux() )
 	error("Operating system NOT supported! Should use either Linux or MacOS.
-		Exiting Julia...")
+		Exiting Julia...\n\n", stacktrace(), "\n\n", catch_stacktrace())
 	exit(1)
 end
 
@@ -260,7 +267,8 @@ try
 	execute_cmd(`docker -v`)
 	info("Docker installed!")
 catch
-	error("Docker is neither installed or reacheable. Exiting Julia...")
+	error("Docker is neither installed or reacheable. Exiting Julia...\n\n",
+		stacktrace(), "\n\n", catch_stacktrace())
 	exit(1)
 end
 
