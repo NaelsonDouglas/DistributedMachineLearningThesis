@@ -169,7 +169,7 @@ end
 function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Adding ", nofworkers, " workers...\n")
-    adddockerworkers(nofworkers,_prototype=true)
+    adddockerworkers(nofworkers,_prototype=true,grancoloso=true)
 
     #keep_analysing_conts = false
     cont_daemon = @async begin
@@ -446,11 +446,11 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     println("Number of nodes:")
     println(length(counts(neighborhoods)))
     println(nodes_neighbors)
-    
+
     #ex = InterruptException()
     try
         Base.throwto(cont_daemon, InterruptException()) #Kills the daemon task
-    end 
+    end
     info("Stoped the container analyser daemon")
 
     rmalldockerworkers()
@@ -506,10 +506,10 @@ function execute_experiment(args)
     for a in analyse_containers()
           write(g,"\n")
           write(g,a*","*start_time[10:length(start_time)]*"[FINAL]") #The iteration inside start_time is to remove the days/month/year. There's probably a better way to do it
-     end 
+     end
      flush(g)
      close(g)
-      
+
     mv(EXECUTING_PATH,results_folder)
     info("Results moved into the folder: "*results_folder*"\n")
     generatetable(experiment_dir)
