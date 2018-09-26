@@ -14,14 +14,15 @@ function workerstat(pid::Int)
 		try
 			return cids_pids_map[pid]
 		catch
-			info("There's no worker with the pid $pid",
-				stacktrace(), "\n\n", catch_stacktrace())
+			info("There's no worker with the pid $pid")
+			return false
 		end
 	else
-		return cids_pids_map
+		error("Negative pid: $pid")
+		return false
 	end
-
 end
+
 "Run Docker container(s) and use them to deploy Julia Worker(s).
 If successful, return the list of the deployed Worker(s), otherwise
 `exit(1)` from Julia."
