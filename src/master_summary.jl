@@ -224,8 +224,11 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
             #DONE --- inside calculate_maxmin
 	    try
-	            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid);
+	            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)
+		    println("WOOORKED!")
 	    catch
+		println("DIDNT work\n")
+
 		@show idx
 		@show workers()
 		@show n_of_procs	
@@ -306,7 +309,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Generating neighborhoods for every node\n")
 
-    nodes_neighbors = Array{Any}(nofworkers)
+    nodes_neighbors = Array{Any}(nworkers())
     for (idx, pid) in enumerate(workers())
         nodes_neighbors[idx] = Int32[]
         for (idx2, elem) in enumerate(neighborhoods)
@@ -333,7 +336,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     #Done inside the train_global_model function. It is recording individually the time in each worker.
     #IF you want to grab the total time (as seen by the master), you might only  get the roof value of the worrkers execution times
     tic() #Global Model time
-    nodes_global_models = Array{Any}(nofworkers)
+    nodes_global_models = Array{Any}(nworkers())
     @sync begin
         info("Training global model")
         for (idx, pid) in enumerate(workers())
@@ -358,14 +361,14 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     info("Done training global model")
 
 
-    nodes_outputdata = Array{Any}(nofworkers)
+    nodes_outputdata = Array{Any}(nworkers())
     @sync begin
         for (idx, pid) in enumerate(workers())
             @async nodes_outputdata[idx] = remotecall_fetch(get_output_data, pid);
         end
     end
 
-    nodes_test_data_evaluated = Array{Any}(nofworkers)
+    nodes_test_data_evaluated = Array{Any}(nworkers())
     @sync begin
         for (idx, pid) in enumerate(workers())
             @async nodes_test_data_evaluated[idx] =  remotecall_fetch(evaluate_test_data_with_local_models, pid, nofworkers, examples);
@@ -517,9 +520,15 @@ function execute_experiment(args)
     results_folder = "./results/"*experiment_dir
 
 
-
     g = open("results/executing/containers.csv","a+")
-    for a in analyse_containers()
+    
+	analysis = ones(1) #initializer
+	try
+		analysis = analyse_containers()
+	end
+
+
+    for a in analysis
           write(g,"\n")
           write(g,a*","*start_time[10:length(start_time)]*"[FINAL]") #The iteration inside start_time is to remove the days/month/year. There's probably a better way to do it
      end
