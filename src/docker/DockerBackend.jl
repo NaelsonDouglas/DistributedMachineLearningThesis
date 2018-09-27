@@ -205,6 +205,9 @@ function dockerstat(metrics::String,cid::Union{String,SubString})
 
 		output = execute_cmd(cmd)
 	catch
+
+		warn(string("Could not execute the comand  ", cmd,"\n [inside the function dockerstat]"))
+		println("-----------------------")
 		@show cids_pids_map
 	end	
 	return output

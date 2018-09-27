@@ -169,7 +169,7 @@ end
 function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
     info("Adding ", nofworkers, " workers...\n")
-    adddockerworkers(nofworkers,_prototype=true,grancoloso=true)
+    adddockerworkers(nofworkers,_prototype=true)
 
     #keep_analysing_conts = false
     cont_daemon = @async begin
@@ -178,7 +178,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         write(g,header)
 	keep_task = true
 	task_failures = 0
-        while(keep_task)
+        while(nworkers() > 1)
             sleep(5)
 	    timestamp = start_time = string(Dates.format(Dates.now(),"HH:MM:SS"))
 	try
@@ -318,7 +318,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
             end
         end
     end
-    print(nodes_neighbors)
+    println(nodes_neighbors)
 
     # Naelson: STOP Calculate Neighborhood (Clustering) Time!!!!!
 
@@ -467,14 +467,14 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     println(nodes_neighbors)
 
     #ex = InterruptException()
-    try
-        Base.throwto(cont_daemon, InterruptException()) #Kills the daemon task
-    end
-    info("Stoped the container analyser daemon")
+    #try
+     #   Base.throwto(cont_daemon, InterruptException()) #Kills the daemon task
+    #end
+    info("Stopping the container analyser daemon")
 
-    rmalldockerworkers()
-    info("Removed all workers and containers")
-    info("EXPERIMENT INTERACTION COMPLETE")
+    #rmalldockerworkers()
+    #info("Removed all workers and containers")
+    #info("EXPERIMENT INTERACTION COMPLETE")
 
 end
 
@@ -525,16 +525,18 @@ function execute_experiment(args)
 	analysis = ones(1) #initializer
 	try
 		analysis = analyse_containers()
-	end
+	
 
 
     for a in analysis
           write(g,"\n")
-          write(g,a*","*start_time[10:length(start_time)]*"[FINAL]") #The iteration inside start_time is to remove the days/month/year. There's probably a better way to do it
+          write(g,string(a)*","*string(start_time[10:length(start_time)])*"[FINAL]") #The iteration inside start_time is to remove the days/month/year. There's probably a better way to do it
      end
      flush(g)
      close(g)
-
+	catch
+		warn("Could not write the final analysis in master_summary.jl")
+	end
     mv(EXECUTING_PATH,results_folder)
     info("Results moved into the folder: "*results_folder*"\n")
     generatetable(experiment_dir)
