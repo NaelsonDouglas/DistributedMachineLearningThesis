@@ -6,10 +6,10 @@ img="dmlt" #BUGFIX Atom: to let Atom include this file
 function execute_cmd(cmd::Cmd)
 	tempfile = "$(randstring(20)).tmp"
 	try
-		info("Executing command $cmd...")
+		info("Executing command $(cmd)...")
 		run(pipeline(cmd, tempfile))
 	catch
-		msg = "Could NOT execute command $cmd.
+		msg = "Could NOT execute command $(cmd).
 			See output file $tempfile"
 		error(msg)
 		error("\n\n", stacktrace(), "\n\n", catch_stacktrace())
@@ -55,7 +55,7 @@ function dockerrun(;img="dmlt", params="-tid", nofcpus=1, memlimit=2048, prototy
 		info("Container $cid is up")
 		return cid
 	catch
-		warn("Could NOT execute cmd $cmd!\n\n", stacktrace(), "\n\n", catch_stacktrace())
+		warn("Could NOT execute cmd $(cmd)!\n\n", stacktrace(), "\n\n", catch_stacktrace())
 		return false
 	end
 end
