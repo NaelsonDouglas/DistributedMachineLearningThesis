@@ -40,8 +40,6 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",_nofcpus=1
 		cid = dockerrun(img=_img,params=_params,nofcpus=_nofcpus,
 						memlimit=_memlimit,prototype=_prototype)
 		# 2. initiate SSHD on the deployed container
-		println("------------------_")
-		@show cid
 		if ! sshup(cid)
 			error("Could NOT init SSH at container $cid. Exiting Julia...")
 			exit(1)
