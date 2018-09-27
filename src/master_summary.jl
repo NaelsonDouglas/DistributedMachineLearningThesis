@@ -176,15 +176,25 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
         g = open("results/executing/containers.csv","w+")
         header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS_JULIA,PIDS_DOCKER,TIMESTAMP"
         write(g,header)
-        while(true)
+	keep_task = true
+	task_failures = 0
+        while(keep_task)
             sleep(5)
 	    timestamp = start_time = string(Dates.format(Dates.now(),"HH:MM:SS"))
+	try
             for a in analyse_containers()
                 write(g,"\n")
                 write(g,a*","*timestamp)
             end
 
             flush(g) #TODO move this command out of the loop to avoid I/O. I'm keeping it inside by now for test purposes
+	catch
+		task_failures+=1
+		if (task_failures >5)
+			keep_task = false
+		end
+		sleep(1)
+	end
         end
         close(g)
     end
@@ -204,7 +214,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
     nodes_maxmin = Array{Any}(nofworkers)
     metadata = Array{Any}(1)
 
-    n_of_procs = parse(args[1])
+    n_of_procs = parse(args[1]) -1
     tic() #Master maxmim
     @sync for (idx, pid) in enumerate(workers())
         @async begin
@@ -213,7 +223,13 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
             # Naelson: START Maximum and Minimum Time Measure!!!!!
 
             #DONE --- inside calculate_maxmin
-            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid);
+	    try
+	            nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid);
+	    catch
+		@show idx
+		@show workers()
+		@show n_of_procs	
+	    end
             # Naelson: STOP Maximum and Minimum Time Measure!!!!!
         end
     end
@@ -239,7 +255,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2)
 
 
     tic()#Histogram time
-    nodes_stats = Array{Any}(nofworkers)
+    nodes_stats = Array{Any}(length(workers()))
     @sync for (idx, pid) in enumerate(workers())
         #@async nodes_stats[idx] = remotecall_fetch(pid, calculate_statistics);
         @async nodes_stats[idx] = remotecall_fetch(calculate_order_statistics, pid)[:];

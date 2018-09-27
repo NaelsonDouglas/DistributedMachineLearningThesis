@@ -163,7 +163,7 @@ end
 function analyse_containers(wks=workers())
 	dockerdata = ""
 	for w in wks
-		current_cont_status = dockerstat("all",get_cid(w))
+		current_cont_status = dockerstat("all",get_cid(w))		
 		data = filter_result(current_cont_status;lines="data")
 		data = vectortocsv(data)
 		if dockerdata == ""
@@ -200,7 +200,14 @@ function dockerstat(metrics::String,cid::Union{String,SubString})
 	if metrics == "all"
 		cmd = Cmd(`docker stats --no-stream $cid`)
 	end
-	return execute_cmd(cmd)
+	output = -1 #initializer
+	try
+
+		output = execute_cmd(cmd)
+	catch
+		@show cids_pids_map
+	end	
+	return output
 end
 
 #=
