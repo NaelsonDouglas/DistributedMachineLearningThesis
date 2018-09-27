@@ -9,7 +9,7 @@ include("DockerBackend.jl")
 
 cids_pids_map = Dict()
 
-function workerstat(pid::Int)
+function get_cid(pid::Int)
 	if pid>0
 		try
 			return cids_pids_map[pid]
@@ -18,8 +18,8 @@ function workerstat(pid::Int)
 			return false
 		end
 	else
-		error("Negative pid: $pid")
-		return false
+		error("Getting a cid from a negative pid= $pid")
+		#return cids_pids_map[pid]
 	end
 end
 
@@ -40,6 +40,8 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",_nofcpus=1
 		cid = dockerrun(img=_img,params=_params,nofcpus=_nofcpus,
 						memlimit=_memlimit,prototype=_prototype)
 		# 2. initiate SSHD on the deployed container
+		println("------------------_")
+		@show cid
 		if ! sshup(cid)
 			error("Could NOT init SSH at container $cid. Exiting Julia...")
 			exit(1)
@@ -91,7 +93,7 @@ function adddockerworkers(nofworkers::Int;_img="dmlt", _params="-tid",_nofcpus=1
 
 	# inverting and merging the local pids_cids_map to the global cids_pids_map Dict
 	pids_cids_map = Dict(zip(collect(values(pids_cids_map)),collect(keys(pids_cids_map))))
-	merge!(cids_pids_map, pids_cids_map)
+	merge!(cids_pids_map, pids_cids_map) #TODO implement a set funciton for cids_pids_map
 
 	return pids
 end
@@ -101,8 +103,8 @@ function rmdockerworkers(pids::Union{Int,Vector{Int}})
 	try
 		for p in pids
 			rmprocs(p)
-			dockerrm(cids_pids_map[p])
-			delete!(cids_pids_map,p)
+			dockerrm(get_cid(p))
+			delete!(cids_pids_map,p) #TODO implement a set funciton for cids_pids_map
 		end
 	catch
 		warn("No Dockerized Worker to be deleted!\n\n",

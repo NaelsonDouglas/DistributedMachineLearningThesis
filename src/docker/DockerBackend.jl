@@ -160,10 +160,10 @@ end
 
 " returns a .csv formated string of all metrics in the specified containers
 * containers: a vector with all the containers to be analyzed"
-function analyse_containers(containers=workers())
+function analyse_containers(wks=workers())
 	dockerdata = ""
-	for i in containers
-		current_cont_status = dockerstat("all",workerstat(i))
+	for w in wks
+		current_cont_status = dockerstat("all",get_cid(w))
 		data = filter_result(current_cont_status;lines="data")
 		data = vectortocsv(data)
 		if dockerdata == ""
