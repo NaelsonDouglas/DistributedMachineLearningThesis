@@ -20,7 +20,7 @@ cd DistributedMachineLearningThesis/src/
 docker build --no-cache -t dmlt .
 export DOCKERBIN="/usr/bin/docker" # Linux users
 #export DOCKERBIN="/usr/local/bin/docker" # MacOS users
-export CID=$(docker run --cpus 1 -tid -v /var/run/docker.sock:/var/run/docker.sock -v $DOCKERBIN:/usr/bin/docker -v /tmp/results:/DistributedMachineLearningThesis/src/results dmlt) && docker exec -ti $CID /bin/bash
+export CID=$($DOCKERBIN run --cpus 1 -tid -v /var/run/docker.sock:/var/run/docker.sock -v $DOCKERBIN:/usr/bin/docker -v /tmp/results:/DistributedMachineLearningThesis/src/results dmlt) && $DOCKERBIN exec -ti $CID /bin/bash
 ```
 
 
