@@ -14,7 +14,7 @@ function get_cid(pid::Int)
 		try
 			return cids_pids_map[pid]
 		catch
-			info("There's no worker with the pid $pid")
+			#info("There's no worker with the pid $pid")
 			return false
 		end
 	else
