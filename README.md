@@ -96,7 +96,8 @@ $n_samples \
 $function \
 $seed \
 $num_nodes \
-$dim_func
+$dim_func \
+$version
 ```
 * `n_of_procs` is the number of distributed nodes on which the experiment will rely.
 * `n_of_examples` is the number of all examples (synthetic data sets) from which 80% will be used for training purposes and the latter 20% will be used for assessment.
@@ -108,6 +109,7 @@ $dim_func
 * `seed` specifies the seed that will be used to generate the TODO.
 * `number_of_neighborhoods` 
 * `number_of_data_set_dimensions` 
+* `version` specifies whether to use histograms ("histogram") or summary statistics ("summary") to build the neighborhood
 * TODO move `seed` to this section
 * TODO `prefix` will be used as prefix to name output files.
 * TODO `suffix` will be used as suffix to name output files.
