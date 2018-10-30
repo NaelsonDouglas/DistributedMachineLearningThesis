@@ -53,7 +53,7 @@ cd DistributedMachineLearningThesis/src/
 git pull #TODO specify the right tag
 $JULIABIN
 include("call_experiment.jl")
-args =["3", "20", "f1", "1234", "4", "2"]
+args =["3", "20", "f1", "1234", "4", "2","summary"]
 experiment(args)
 ```
 
@@ -64,6 +64,7 @@ The 'args' vector is a vector containing
 *  Seed
 *  n_cluster
 *  dim
+*  version of code to run: summary | histogram
 
 You can select different configurations for 'args' and execute it as many times as you want. For a session you need to call include("call_experiments.jl") only once.
 
