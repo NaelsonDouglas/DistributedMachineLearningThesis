@@ -174,12 +174,18 @@ end
 function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, version = "summary")
 
     info("Adding ", nofworkers, " workers...\n")
-    #adddockerworkers(nofworkers,_prototype=true)
-    addprocs(nofworkers)
+    adddockerworkers(nofworkers,_prototype=true)
+    #addprocs(nofworkers)
     
     #keep_analysing_conts = false
     cont_daemon = @async begin
-        g = open("results/executing/containers.csv","w+")
+        try
+            g = open("results/executing/containers.csv","w+")
+        catch
+            println("Creating executing folder")
+            mkpath("./results/executing")
+            g = open("results/executing/containers.csv","w+")
+        end
         header = "CONTAINER,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS_JULIA,PIDS_DOCKER,TIMESTAMP"
         write(g,header)
         keep_task = true
@@ -440,8 +446,8 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
 
     info("Stopping the container analyser daemon")
 
-    #rmalldockerworkers()
-    rmprocs(workers());
+    rmalldockerworkers()
+    #rmprocs(workers());
     info("Removed all workers and containers")
     info("EXPERIMENT INTERACTION COMPLETE")
 end
@@ -497,7 +503,7 @@ function execute_experiment(args)
         mv(EXECUTING_PATH,results_folder, remove_destination=true)
     end
     info("Results moved into the folder: "*results_folder*"\n")
-    #generatetable(experiment_dir)
-    #rmalldockerworkers()
-    rmprocs(workers());
+    generatetable(experiment_dir)
+    rmalldockerworkers()
+    #rmprocs(workers());
 end
