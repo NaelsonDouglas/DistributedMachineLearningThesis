@@ -53,7 +53,7 @@ cd DistributedMachineLearningThesis/src/
 git pull #TODO specify the right tag
 $JULIABIN
 include("call_experiment.jl")
-args =["3", "20", "f1", "1234", "4", "2","summary"]
+args =["4", "1000", "f1", "1234", "2", "2","summary"]
 experiment(args)
 ```
 
