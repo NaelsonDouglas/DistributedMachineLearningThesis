@@ -179,6 +179,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
     
     #keep_analysing_conts = false
     cont_daemon = @async begin
+        g=-1
         try
             g = open("results/executing/containers.csv","w+")
         catch
