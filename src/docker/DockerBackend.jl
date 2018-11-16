@@ -164,6 +164,9 @@ function analyse_containers(wks=workers())
 	dockerdata = ""
 	for w in wks
 		current_cont_status = dockerstat("all",get_cid(w))		
+		if current_cont_status == false
+			return false
+		end
 		data = filter_result(current_cont_status;lines="data")
 		data = vectortocsv(data)
 		if dockerdata == ""
@@ -209,6 +212,7 @@ function dockerstat(metrics::String,cid::Union{String,SubString})
 		warn(string("Could not execute the comand  ", cmd,"\n [inside the function dockerstat]"))
 		println("-----------------------")
 		@show cids_pids_map
+		return false
 	end	
 	return output
 end

@@ -196,6 +196,10 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
             timestamp = start_time = string(Dates.format(Dates.now(),"HH:MM:SS"))
             try
                 for a in analyse_containers()
+                    if a == false
+                        close(g)
+                        exit(1)
+                    end
                     write(g,"\n")
                     write(g,a*","*timestamp)
                 end
