@@ -191,14 +191,14 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
         write(g,header)
         keep_task = true
         task_failures = 0
-        while(nworkers() > 1)
+        while((nworkers() > 1) && keep_task)
             sleep(5)
             timestamp = start_time = string(Dates.format(Dates.now(),"HH:MM:SS"))
             try
                 for a in analyse_containers()
                     if a == false
                         close(g)
-                        exit(1)
+                        keep_task = false
                     end
                     write(g,"\n")
                     write(g,a*","*timestamp)
