@@ -163,16 +163,20 @@ end
 function analyse_containers(wks=workers())
 	dockerdata = ""
 	for w in wks
-		current_cont_status = dockerstat("all",get_cid(w))		
-		if current_cont_status == false
+		try
+			current_cont_status = dockerstat("all",get_cid(w))		
+			if current_cont_status == false
+				return false
+			end
+			data = filter_result(current_cont_status;lines="data")
+			data = vectortocsv(data)
+			if dockerdata == ""
+				dockerdata = vcat(data)
+			else
+				dockerdata = vcat(dockerdata,data)
+			end
+		catch
 			return false
-		end
-		data = filter_result(current_cont_status;lines="data")
-		data = vectortocsv(data)
-		if dockerdata == ""
-			dockerdata = vcat(data)
-		else
-			dockerdata = vcat(dockerdata,data)
 		end
 	end
 	return dockerdata

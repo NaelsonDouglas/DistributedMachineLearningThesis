@@ -487,21 +487,22 @@ function execute_experiment(args)
     g = open("results/executing/containers.csv","a+")
     
     analysis = ones(1) #initializer
-    try
-        analysis = analyse_containers()
+   
+    analysis = analyse_containers()
         # The iteration inside start_time is to remove the 
         # days/month/year. There's probably a better way to do it
-        for a in analysis
-          write(g,"\n")
-          write(g,string(a)*","*string(
-                    start_time[10:length(start_time)])*"[FINAL]") 
-        end
-        flush(g)
-        close(g)
-    catch
-        warn("Could not write the final analysis in master_summary.jl")
-    end
-    try
+	if analysis != false
+	        for a in analysis
+        	  write(g,"\n")
+	          write(g,string(a)*","*string(
+        	            start_time[10:length(start_time)])*"[FINAL]") 
+	        end
+	        flush(g)
+        	close(g)
+	end
+    
+       # warn("Could not write the final analysis in master_summary.jl")
+        try
         mv(EXECUTING_PATH,results_folder)
     catch
         warn("The folder: "*results_folder*" is being replaced\n")

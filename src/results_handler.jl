@@ -8,7 +8,12 @@ function vectortocsv(vector)
     buffer = ""
 
     container = vector[1]
-    pids_cids_map = Dict(zip(collect(values(cids_pids_map)),collect(keys(cids_pids_map))))
+	cids = collect(values(cids_pids_map))
+	pids = collect(keys(cids_pids_map))
+	for i =1:length(cids)
+		cids[i] = cids[i][1:12]
+	end
+    pids_cids_map = Dict(zip(cids,pids))
    _vector = vcat(vector[1:6],string(pids_cids_map[container] ),vector[7:length(vector)])
 
     for i in _vector
