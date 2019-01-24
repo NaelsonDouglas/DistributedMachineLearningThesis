@@ -8,11 +8,10 @@ for num = 1:3
   for seed = 1:5
     start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
     args =["4", num_data[num], "f1", seeds[seed], "2", "2","summary"]
-    execute_experiment(args)
+    folder = execute_experiment(args)
+    push!(folders, folder)
   end
-end
 
-#=
 
   output_folder = "./results/"*join([args[1], args[2], args[3], args[5], args[6], args[7]], "_")
   mkpath(output_folder)
@@ -24,5 +23,4 @@ end
   end
 
 end
-=#
 

@@ -506,10 +506,11 @@ function execute_experiment(args)
         mv(EXECUTING_PATH,results_folder)
     catch
         warn("The folder: "*results_folder*" is being replaced\n")
-        mv(EXECUTING_PATH,results_folder, remove_destination=true)
+        mv(EXECUTING_PATH, results_folder, remove_destination=true)
     end
     info("Results moved into the folder: "*results_folder*"\n")
     generatetable(experiment_dir)
     rmalldockerworkers()
     #rmprocs(workers());
+    return results_folder
 end
