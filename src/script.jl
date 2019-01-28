@@ -3,9 +3,17 @@ include("call_experiment.jl")
 seeds = ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234"]
 num_data = ["100", "1000", "10000"]
 
-for num = 1:3
+exp_lim = 3
+seed_lim = 3
+for num = 1:exp_lim
   folders = []
-  for seed = 1:5
+  for seed = 1:seed_lim
+
+	println("========================")
+	println("Experiment $num out of $exp_lim ")
+	println("Using seed $seed out of $seed_lim ")
+	println("========================")
+
     start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
     args =["4", num_data[num], "f1", seeds[seed], "2", "2","summary"]
     cids_pids_map = Dict()
