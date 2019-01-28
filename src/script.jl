@@ -8,6 +8,7 @@ for num = 1:3
   for seed = 1:5
     start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
     args =["4", num_data[num], "f1", seeds[seed], "2", "2","summary"]
+    cids_pids_map = Dict()
     folder = execute_experiment(args)
     push!(folders, folder)
   end
