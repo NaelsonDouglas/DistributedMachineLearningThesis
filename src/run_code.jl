@@ -2,8 +2,9 @@ include("call_experiment.jl")
 
 
 if length(ARGS) < 7
-  eroor("You need to specify all variables")
+  error("You need to specify all variables")
   quit()
+end
 
 n_of_procs = ARGS[1]
 n_of_examples = ARGS[2]

@@ -1,0 +1,9 @@
+4 100 f1 111 2 2 summary
+4 100 f1 222 2 2 summary
+4 100 f1 333 2 2 summary
+4 1000 f1 111 2 2 summary
+4 1000 f1 222 2 2 summary
+4 1000 f1 333 2 2 summary
+4 10000 f1 111 2 2 summary
+4 10000 f1 222 2 2 summary
+4 10000 f1 333 2 2 summary

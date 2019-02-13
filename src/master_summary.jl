@@ -481,7 +481,8 @@ function execute_experiment(args)
 
     commit = readstring(`git log --pretty=format:'%h' -n 1`)
 
-    experiment_dir = commit*"-"*start_time*"-"*string(seed)*"-"*version
+    #experiment_dir = commit*"-"*start_time*"-"*string(seed)*"-"*version
+    experiment_dir = string(n_of_procs)*"-"*string(n_of_examples)*"-"*string(funcion)*"-"*string(seed)*"-"*string(num_nodes)*"-"*string(dims)*"-"*string(version)
     results_folder = "./results/"*experiment_dir
 
     g = open("results/executing/containers.csv","a+")
