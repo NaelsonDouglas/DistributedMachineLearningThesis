@@ -135,6 +135,17 @@ The experiments used the following parameter configuration:
 * Sample_size in MB: 0.001, 0.01, 0.1, 1, 10, 100, 1000, 2000, 3000, etc.
 * ...
 
+# Running the experiments
+
+To run the experiments you can use the script ```bash script.sh experiments.txt```
+In the experiments.txt file you must list each run configuration separated by line with the format:
+
+```
+n_procs n_samples function seed num_nodes dim_func version
+```
+
+Those parameters are explained in the section *Understand the parameters* 
+
 # TODO MISC
 
 * use Julia standards
