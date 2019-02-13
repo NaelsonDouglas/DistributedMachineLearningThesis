@@ -137,8 +137,13 @@ The experiments used the following parameter configuration:
 
 # Running the experiments
 
-To run the experiments you can use the script ```bash script.sh experiments.txt```
-In the experiments.txt file you must list each run configuration separated by line with the format:
+To run the experiments you can use the file ```script.sh```:
+
+```
+bash script.sh experiments.txt
+```
+
+In the ```experiments.txt``` file you must list each run configuration separated by line with the format:
 
 ```
 n_procs n_samples function seed num_nodes dim_func version
