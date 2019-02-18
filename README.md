@@ -87,42 +87,31 @@ This research prototype is assessed by using the following metrics:
 
 The command used to run the prototype includes its parameters as described next.
 
-```julia
-args =["3", "20", "f1", "1234", "4", "2"]
-experiment(args)
+Open a Julia session and run the following command:
 
-TODO review this!
-$n_procs \
-$n_samples \
-$function \
-$seed \
-$num_nodes \
-$dim_func \
-$version
+```julia
+include("script.jl")
 ```
-* `n_of_procs` is the number of distributed nodes on which the experiment will rely.
-* `n_of_examples` is the number of all examples (synthetic data sets) from which 80% will be used for training purposes and the latter 20% will be used for assessment.
-* `synthetic_function` is the function that will be used to create the synthetic data sets. Currently, these are the available functions:
- * $f1(x1, x2) = sin(x1).*sin(x2)./(x1.*x2) + rand(Normal(0,0.1),size(x1)[1])$
- * $f2(x1, x2, x3) = 0.01.*x1 + 0.02.*x2.^(2) + 0.9.*x3.^(3) + rand(Normal(0,0.1),size(x1)[1])$
- * $f3(x1, x2) = 0.6.*x1 + 0.3.*x2 + rand(Normal(0,0.1),size(x1)[1])$
- * $f10(x) = 10.*sin(pi.*x[:,1].*x[:,2]) + 20(x[:,3]-0.5).^2 + 10.*x[:,4] + 5.*x[:,5] + 10.*sin(pi.*x[:,6].*x[:,7]) + 20(x[:,8]-0.5).^2 + 10.*x[:,9] + 5.*x[:,10] + rand(Normal(0,0.1),size(x[:,1])[1])$
+
+Edit the vectors in the `script.jl` file to set up the experiment parameters which are explained next.
+
+* `nof_nodes` is the number of distributed nodes which experiment will launch.
+* `nof_samples` is the number of all examples (synthetic data sets) from which 80% will be used for training purposes and the latter 20% will be used for assessment.
+* `function` is the synthetic function that will be used to create the synthetic data sets. Currently, these see [here the available functions](TODO).
 * `seed` specifies the seed that will be used to generate the TODO.
-* `number_of_neighborhoods` 
-* `number_of_data_set_dimensions` 
-* `version` specifies whether to use histograms ("histogram") or summary statistics ("summary") to build the neighborhood
-* TODO move `seed` to this section
-* TODO `prefix` will be used as prefix to name output files.
-* TODO `suffix` will be used as suffix to name output files.
-* `variances` specifies the variance value(s) that should be used for each `number_of_neighborhoods`. If `variances` is set to a single value, it will apply this value to all neighborhoods.
- 
+* `nof_neighborhoods` 
+* `number_of_dataset_dimensions` the number of function parameters, MUST be fixed in this way: $f1=2, f2=3, f3=2, f4=5, f10=1$ ([more info here](TODOdatasets.jl))
+* `data_representation` specifies whether to use histograms ("histogram") or summary statistics ("summary") to build the neighborhood. If not set, it is assumed to be "summary".
+
 ## Output file format
 
 The output file is named based on this standard:
 
+TODO-Naelson 
+
 `timestamp-function-number_of_distributed_sources-sample_size.txt`
 
-TODO ...
+
 
 # Prototype assessment as presented in paper [TODO]()
 
@@ -130,23 +119,21 @@ TODO ...
 
 The experiments used the following parameter configuration:
 
-* Functions: f1, f2, f3, f4, f5, etc.
-* Number of Distributed Sources: 4, 8, 12, 16, 20, 24, 28, 32, 36
-* Sample_size in MB: 0.001, 0.01, 0.1, 1, 10, 100, 1000, 2000, 3000, etc.
-* ...
+* `nof_nodes` = [4, 8, 12, 16, 20, 24, 28, 32, 36]
+* `nof_samples` = [10^3, 10^4, 10^5]  
+* `function` = [f1, f2, f4]
+* `seed` = [1..10]
+* `nof_neighborhoods` = [2, 3]
+* `number_of_dataset_dimensions` = according to each function 
+* `data_representation` = ["histogram", "summary"]
+
 
 # Running the experiments
 
-To run the experiments you can use the file ```script.sh```:
+To run the experiments use the file `script.jl`:
 
-```
-bash script.sh experiments.txt
-```
-
-In the ```experiments.txt``` file you must list each run configuration separated by line with the format:
-
-```
-n_procs n_samples function seed num_nodes dim_func version
+```julia
+include("script.jl")
 ```
 
 Those parameters are explained in the section *Understand the parameters* 
