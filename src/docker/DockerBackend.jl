@@ -129,7 +129,7 @@ end
 "It's an auxiliar function for filter_result. It just removes the empty spaces on each line"
 function filterline(line)
 	line =replace(line,"  ","_")
-	line =split(line,"_")
+	line =split(line,"°")
 	line =filter(line) do x
 		x!=""
 	end
