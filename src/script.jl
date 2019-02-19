@@ -16,7 +16,7 @@ idx_functions = 1
 idx_dim_functions = idx_functions
 idx_num_neighboors = 1
 =#
-try
+
   for idx_num_nodes in num_nodes
     for idx_num_neighboors in num_neighboors  
         for idx_seeds in seeds
@@ -36,9 +36,7 @@ try
         end #seeds  
     end #idx_num_neighboors
   end #num_nodes  
-catch
-  rmalldockerworkers()
-end
+
 
 
 
