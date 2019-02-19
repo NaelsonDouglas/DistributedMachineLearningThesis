@@ -174,7 +174,13 @@ end
 function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, version = "summary")
 
     info("Adding ", nofworkers, " workers...\n")
-    adddockerworkers(nofworkers,_prototype=true,grancoloso=true)
+    try
+        adddockerworkers(nofworkers,_prototype=true,grancoloso=true)
+    catch
+        warn("Arror trying once again.")
+        sleep(5)
+        adddockerworkers(nofworkers,_prototype=true,grancoloso=true)
+    end
     #addprocs(nofworkers)
     
     #keep_analysing_conts = false
