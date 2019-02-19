@@ -20,7 +20,7 @@ idx_num_neighboors = 1
 for idx_seeds in seeds
     
   
-  args =["4", data_size[1], functions[1], idx_seeds, num_neighboors[1], dim_fun[1],"summary"]     
+  args =["4", data_size[1], functions[1], idx_seeds, num_neighboors[1], dim_functions[1],"summary"]     
   cids_pids_map = Dict()
 
   folder = execute_experiment(args)  
