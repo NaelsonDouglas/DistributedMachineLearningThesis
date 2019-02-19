@@ -2,7 +2,7 @@ include("call_experiment.jl")
 
 data_size = ["1000", "10000", "100000"]
 num_nodes = ["4","8","12","16","20","24","28","32","36"]
-seeds = ["1111", "2222", "3333"]#, "4444", "5555", "6666", "7777", "8888", "9999", "1234"]
+seeds = ["1111", "2222"]#, "3333, "4444", "5555", "6666", "7777", "8888", "9999", "1234"]
 functions = ["f1","f2","f4"]
 dim_functions = ["2","3","5"] #f1,f2 and f4
 num_neighboors = ["2","3"]
@@ -19,12 +19,13 @@ idx_num_neighboors = 1
 
 for idx_seeds in seeds
     
-  
+  start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
   args =["4", data_size[1], functions[1], idx_seeds, num_neighboors[1], dim_functions[1],"summary"]     
   cids_pids_map = Dict()
 
-  folder = execute_experiment(args)  
-
+  folder = execute_experiment(args)
+  mv(folder,folder*"_"*start_time)
+  rmalldockerworkers()
 end #seeds
 
 
