@@ -20,11 +20,11 @@ idx_num_neighboors = 1
   for idx_num_nodes in num_nodes
     for idx_num_neighboors in num_neighboors  
         for idx_seeds in seeds
-            for idx_functions in functions              
+            #for idx_functions in functions              
                 for idx_data_size in data_size
                 
                 start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
-                args =[idx_num_nodes, idx_data_size, idx_functions, idx_seeds, idx_num_neighboors, dim_functions[idx_functions],"summary"]     
+                args =[idx_num_nodes, idx_data_size, "f1", idx_seeds, idx_num_neighboors, "2","summary"]     
                 cids_pids_map = Dict()
 
                 folder = execute_experiment(args)
@@ -32,7 +32,7 @@ idx_num_neighboors = 1
                 rmalldockerworkers()
                 end #data_size
                     
-            end #functions
+            #end #functions
         end #seeds  
     end #idx_num_neighboors
   end #num_nodes  
