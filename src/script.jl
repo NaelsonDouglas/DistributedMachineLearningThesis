@@ -1,7 +1,7 @@
 include("call_experiment.jl")
 
 data_size = ["1000", "10000"]#, "100000"]
-num_nodes = ["2","4","8","12","16","20","24","28","32","36"]
+num_nodes = ["2","4","8","16","20","24","28","32","36"]
 seeds = ["1111", "2222"]#, "3333, "4444", "5555", "6666", "7777", "8888", "9999", "1234"]
 functions = ["f1","f2","f4"]
 dim_functions = Dict("f1"=>"2","f2"=>"3","f4"=>"5")
@@ -16,27 +16,29 @@ idx_functions = 1
 idx_dim_functions = idx_functions
 idx_num_neighboors = 1
 =#
-for idx_num_nodes in num_nodes
-  for idx_num_neighboors in num_neighboors  
-      for idx_seeds in seeds
-          for idx_functions in functions
-            
-              for idx_data_size in data_size
-              
-              start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
-              args =[idx_num_nodes, idx_data_size, idx_functions, idx_seeds, idx_num_neighboors, dim_functions[idx_functions],"summary"]     
-              cids_pids_map = Dict()
+try
+  for idx_num_nodes in num_nodes
+    for idx_num_neighboors in num_neighboors  
+        for idx_seeds in seeds
+            for idx_functions in functions              
+                for idx_data_size in data_size
+                
+                start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
+                args =[idx_num_nodes, idx_data_size, idx_functions, idx_seeds, idx_num_neighboors, dim_functions[idx_functions],"summary"]     
+                cids_pids_map = Dict()
 
-              folder = execute_experiment(args)
-              mv(folder,folder*"_"*start_time)
-              rmalldockerworkers()
-              end #data_size
-                  
-          end #functions
-      end #seeds  
-  end #idx_num_neighboors
-end #num_nodes  
-
+                folder = execute_experiment(args)
+                mv(folder,folder*"_"*start_time)
+                rmalldockerworkers()
+                end #data_size
+                    
+            end #functions
+        end #seeds  
+    end #idx_num_neighboors
+  end #num_nodes  
+catch
+  rmalldockerworkers()
+end
 
 
 
