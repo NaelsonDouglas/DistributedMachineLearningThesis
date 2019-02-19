@@ -18,12 +18,12 @@ idx_num_neighboors = 1
 =#
 
   for idx_num_nodes in num_nodes
-    for idx_num_neighboors in num_neighboors  
-        for idx_seeds in seeds
-            for idx_functions in functions              
-                for idx_data_size
-                 in data_size
-                  for i=1:repetitions                
+      for idx_functions in functions              
+        for idx_num_neighboors in num_neighboors  
+          for idx_seeds in seeds
+            for idx_data_size in data_size
+              for i=1:repetitions                
+                    rmprocs(workers()) #Just in case there's a network error when executing the rmalldockerworkers at the end of the loop
                     start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
                     args =[idx_num_nodes, idx_data_size, idx_functions, idx_seeds, idx_num_neighboors, dim_functions[idx_functions],"summary"]     
                     cids_pids_map = Dict()
@@ -31,12 +31,11 @@ idx_num_neighboors = 1
                     folder = execute_experiment(args)
                     mv(folder,folder*"_"*start_time)
                     rmalldockerworkers()
-                  end #repetitions
-                end #data_size
-                    
-            end #functions
-        end #seeds  
-    end #idx_num_neighboors
+                end #repetitions
+              end #data_size                    
+            end #seeds  
+        end #idx_num_neighboors
+    end #functions
   end #num_nodes  
 
 
