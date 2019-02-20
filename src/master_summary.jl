@@ -193,7 +193,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
             mkpath("./results/executing")
             g = open("results/executing/containers.csv","w+")
         end
-        header = "CONTAINER,NAME,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,BLOCKI/O,PIDS_JULIA,PIDS_DOCKER,TIMESTAMP"
+        header = "CONTAINER,NAME,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,PIDS_JULIA,BLOCKI/O,PIDS_DOCKER,TIMESTAMP"
         write(g,header)
         keep_task = true
         task_failures = 0
