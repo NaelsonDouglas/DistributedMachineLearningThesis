@@ -1,0 +1,4 @@
+calculate_maxmin_seconds,clustering_time_seconds,elapsed_time_seconds,create_histogram_seconds,MAPE,MSE,R2,testing_model_seconds,train_global_model_seconds,local_training_seconds
+3.45,1.38,43.11,0.69,0.0,0.0,0.0,0.93,4.3,16.23
+0.6,0.0,0.0,0.0,723.9160877658109,0.023107319079175556,-1.1651684378525258,0.0,1.49,13.24
+0.55,0.0,0.0,0.0,266.35852195583635,0.08540456875534828,-0.10802658899193118,0.0,1.68,12.73
