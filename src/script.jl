@@ -17,8 +17,8 @@ idx_dim_functions = idx_functions
 idx_num_neighboors = 1
 =#
 
-  for idx_num_nodes in num_nodes
-      for idx_functions in functions              
+  for idx_functions in functions              
+    for idx_num_nodes in num_nodes
         for idx_num_neighboors in num_neighboors  
           for idx_seeds in seeds
             for idx_data_size in data_size
@@ -35,8 +35,8 @@ idx_num_neighboors = 1
               end #data_size                    
             end #seeds  
         end #idx_num_neighboors
-    end #functions
-  end #num_nodes  
+    end #num_nodes  
+  end #functions
 
 
 
