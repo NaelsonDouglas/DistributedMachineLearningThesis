@@ -177,9 +177,11 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
     try
         adddockerworkers(nofworkers,_prototype=true,grancoloso=true)
     catch
-        warn("Arror trying once again.")
-        sleep(5)
+        warn("Error, could not add the workers, trying again in 10 seconds.")
+        rmalldockerworkers()
+        sleep(10)
         adddockerworkers(nofworkers,_prototype=true,grancoloso=true)
+        info("Error fixed. Workers added.")
     end
     #addprocs(nofworkers)
     
@@ -211,12 +213,17 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
                 end
 
                 flush(g) #TODO move this command out of the loop to avoid I/O. I'm keeping it inside by now for test purposes
+
             catch
                 task_failures+=1
-                if (task_failures >5)
+                if (task_failures >2 || nworkers() == 1)
                     keep_task = false
                 end
             sleep(1)
+            end
+            
+            if nworkers() == 1
+                    keep_task = false
             end
         end
     close(g)
