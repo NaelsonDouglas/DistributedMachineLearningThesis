@@ -163,6 +163,7 @@ end
 function analyse_containers(wks=workers())
 	dockerdata = ""
 	for w in wks
+		sleep(5)
 		try
 			current_cont_status = dockerstat("all",get_cid(w))		
 			if current_cont_status == false
