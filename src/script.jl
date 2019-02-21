@@ -28,6 +28,14 @@ idx_num_neighboors = 1
                     args =[idx_num_nodes, idx_data_size, idx_functions, idx_seeds, idx_num_neighboors, dim_functions[idx_functions],"summary"]     
                     cids_pids_map = Dict()
 
+                    #Prnts all variables and it's values before executing the experiment. If the control variables are not reseted, it might mean there's something wrong
+                    map(names(Main)[4:end]) do x
+                      print(x)
+                      print(" --- ")
+                      println(eval(x))
+                      println()
+                    end
+
                     folder = execute_experiment(args)
                     mv(folder,folder*"_"*start_time)
                     rmalldockerworkers()
