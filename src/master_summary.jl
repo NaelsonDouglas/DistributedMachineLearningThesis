@@ -179,6 +179,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
     catch
         warn("Error, could not add the workers, trying again in 10 seconds.")
         rmalldockerworkers()
+        rmprocs(workers())
         sleep(10)
         adddockerworkers(nofworkers,_prototype=true,grancoloso=true)
         info("Error fixed. Workers added.")
