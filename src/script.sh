@@ -23,7 +23,7 @@ do
 							for num_nei in ${num_neighboors[@]}
 							do							
 								echo $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]}								
-								JULIABIN ugly_script.jl $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]} summary
+								$JULIABIN ugly_script.jl $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]} summary
 							done
 						done
 					done
