@@ -1,27 +1,14 @@
-workspace()
-gc()
 include("call_experiment.jl")
-
-repetitions = 10
-try
-  repetitions = LastMain.repetitions - 1
-end
 
 start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
 
 
-args =["8", "1000", "f1", "1111", "2", "2","summary"]     
+args =[ARGS[1], ARGS[2], ARGS[3], ARGS[4], ARGS[5], ARGS[6],"summary"]     
+#args =["8", "1000", "f1", "1111", "2", "2","summary"]     
 cids_pids_map = Dict()
 
 folder = execute_experiment(args)
 mv(folder,folder*"_"*start_time)
-rmalldockerworkers()
-rmprocs(workers()) #Just in case there's a network error when executing the rmalldockerworkers at the end of the loop
-
-if repetitions > 0
-  include("ugly_script.jl")
-end
-
 
 
 
