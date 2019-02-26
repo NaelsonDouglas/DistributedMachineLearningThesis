@@ -6,9 +6,10 @@ start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
 args =[ARGS[1], ARGS[2], ARGS[3], ARGS[4], ARGS[5], ARGS[6],"summary"]     
 #args =["8", "1000", "f1", "1111", "2", "2","summary"]     
 cids_pids_map = Dict()
-
-folder = execute_experiment(args)
-mv(folder,folder*"_"*start_time)
+try
+  folder = execute_experiment(args)
+  mv(folder,folder*"_"*start_time)
+end
 
 
 

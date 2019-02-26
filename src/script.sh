@@ -3,7 +3,7 @@ functions=(f1 f2 f4)
 declare -A dim_functions
 dim_functions=( ["f1"]="2" ["f2"]="3")
 data_size=(1000 10000)
-num_nodes=(8 12 16 20 24 28 32)
+num_nodes=(16 32 64)
 seeds=(1111  2222 3333  4444  5555  6666  7777  8888  9999  1234)
 num_neighboors=(2 3)
 
@@ -24,6 +24,7 @@ num_neighboors=(2 3)
 								do						
 									echo $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]}								
 									/root/julia/bin/julia ugly_script.jl $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]} summary
+									docker kill $(docker ps -q --last $n_nodes)
 								done
 							done
 						done
