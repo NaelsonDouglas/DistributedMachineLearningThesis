@@ -201,7 +201,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
         keep_task = true
         task_failures = 0
         while((nworkers() > 1) && keep_task)
-            sleep(5)
+            sleep(rand([5:15]))
             timestamp = start_time = string(Dates.format(Dates.now(),"HH:MM:SS"))
             try
                 for a in analyse_containers()
@@ -244,8 +244,8 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
     tic() #Master maxmim
     @sync for (idx, pid) in enumerate(workers())
         @async begin
-            metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), n_of_examples, num_nodes, dim);
-            remotecall_fetch(generate_test_data, pid, eval(parse(func)), n_of_examples, num_nodes, dim);
+            metadata[1] = remotecall_fetch(generate_node_data, pid, eval(parse(func)), nofexamples, num_nodes, dim);
+            remotecall_fetch(generate_test_data, pid, eval(parse(func)), nofexamples, num_nodes, dim);
             try
                 nodes_maxmin[idx] = remotecall_fetch(calculate_maxmin, pid)
             catch
