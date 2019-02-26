@@ -201,7 +201,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
         keep_task = true
         task_failures = 0
         while((nworkers() > 1) && keep_task)
-            sleep(rand([5:15]))
+            sleep(rand(5:15))
             timestamp = start_time = string(Dates.format(Dates.now(),"HH:MM:SS"))
             try
                 for a in analyse_containers()
