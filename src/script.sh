@@ -23,8 +23,7 @@ num_neighboors=(2 3)
 								for repetitions	 in {1..10}
 								do						
 									echo $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]}								
-									/root/julia/bin/julia ugly_script.jl $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]} summary
-									docker kill $(docker ps -q --last $n_nodes)
+									/root/julia/bin/julia ugly_script.jl $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]} summary									
 								done
 							done
 						done

@@ -9,6 +9,8 @@ cids_pids_map = Dict()
 try
   folder = execute_experiment(args)
   mv(folder,folder*"_"*start_time)
+catch
+  rmalldockerworkers()
 end
 
 
