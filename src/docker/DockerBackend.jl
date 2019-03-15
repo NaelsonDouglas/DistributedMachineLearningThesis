@@ -43,6 +43,7 @@ function dockerrun(;img="dmlt", params="-tid", nofcpus=1, memlimit=2048, prototy
 	if prototype
 		cmd = Cmd(`docker run $params
 			-v /tmp/results:/DistributedMachineLearningThesis/src/results
+			-v /tmp/Snapshots:/DistributedMachineLearningThesis/src/Snapshots
 			--cpus $nofcpus -m $memlimit $img`)
 	else
 		cmd = Cmd(`docker run $params --cpus $nofcpus -m $memlimit $img`)
