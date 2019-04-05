@@ -5,7 +5,7 @@ dim_functions=( ["f1"]="2" ["f2"]="3")
 data_size=(64000)
 num_nodes=(16 32 64)
 seeds=(1111  2222 3333  4444  5555  6666  7777  8888  9999  1234)
-num_neighboors=(2 3)
+num_neighboors=(2)
 
 
 		for  f in ${functions[@]}
