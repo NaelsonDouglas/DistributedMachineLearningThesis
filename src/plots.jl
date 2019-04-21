@@ -89,3 +89,14 @@ function get_tables(table_name;n_nodes="*",data_size="*",func="*",seed="*",neigh
 	end
 	return tables
 end
+
+"Return the dataframes with the container tables.
+You can filter the results using the keywords, '*' is the usual unix wildcard, ie. all results for that token"
+function container_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
+	get_tables("containers",n_nodes=n_nodes,data_size=data_size,func=func,seed=seed,neighboors=neighboors,dim=dim)
+end
+"Return the dataframes with the system tables.
+You can filter the results using the keywords, '*' is the usual unix wildcard, ie. all results for that token"
+function system_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
+	get_tables("system",n_nodes=n_nodes,data_size=data_size,func=func,seed=seed,neighboors=neighboors,dim=dim)
+end
