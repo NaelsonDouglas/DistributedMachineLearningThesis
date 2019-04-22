@@ -54,7 +54,10 @@ function get_tables(table_name;n_nodes="*",data_size="*",func="*",seed="*",neigh
 	tables = []
 
 	for i in table_files
-		push!(tables,CSV.read(i))
+		tb = CSV.read(i)
+		if length(tb[1]) > 0
+			push!(tables,tb)
+		end
 	end
 	return tables
 end
@@ -62,10 +65,47 @@ end
 "Return the dataframes with the container tables.
 You can filter the results using the keywords, '*' is the usual unix wildcard, ie. all results for that token"
 function container_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
-	get_tables("containers",n_nodes=n_nodes,data_size=data_size,func=func,seed=seed,neighboors=neighboors,dim=dim)
+	tables = get_tables("containers",n_nodes=n_nodes,data_size=data_size,func=func,seed=seed,neighboors=neighboors,dim=dim)
 end
 "Return the dataframes with the system tables.
 You can filter the results using the keywords, '*' is the usual unix wildcard, ie. all results for that token"
 function system_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
 	get_tables("system",n_nodes=n_nodes,data_size=data_size,func=func,seed=seed,neighboors=neighboors,dim=dim)
+end
+
+
+"This wouldn't be necessary if I had formated the tables on the file itself when they were being created"
+function clear_column(column, col_name)
+	result=[]
+	if col_name == "CPU%"
+		for item in column
+			if length(item) > 0
+				push!(result,parse(item[1:length(item)-1])) #removes the '%' symbol
+			end
+		end
+	end
+	return result
+end
+
+
+"An auxiliar function to format the output of a single table column.
+It takes the column as a vector and the name of the column and returns well formated vector"
+function merge_columns(tables,col_name)	
+	result=[]
+	for tbl in tables
+		column = tbl[Symbol(col_name)]		
+		column = clear_column(column,col_name)
+		result = vcat(result,column)
+	end	
+	return result
+end
+
+
+"Plots a boxplot for the specified variable
+The tables parameter  is a vector with the tables you wanna use as source for the plot.
+* You must use system_tables(...) or container_tables(...) to filter this data.
+* Variable is the variable within the tables used to make the boxplot"
+function boxplot_experiment(tables,col_name)
+	all_columns = merge_columns(tables,col_name)
+	boxplot(all_columns)
 end
