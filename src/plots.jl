@@ -168,6 +168,46 @@ variable = "local_training_seconds"
 y=[merge_columns(nwks2,variable),merge_columns(nwks8,variable),merge_columns(nwks16,variable)]
 boxplot(["2 nodes" "8 nodes" "16 nodes"],y,leg=false,outliers=false)
 
+variable = "calculate_maxmin_seconds"
+maxmim = [merge_columns(nwks16,variable,"T")]
+
+variable = "clustering_time_seconds"
+clustering = [merge_columns(nwks16,variable)]
+
+variable = "create_histogram_seconds"
+create_histogram = [merge_columns(nwks16,variable)]
+
+variable = "testing_model_seconds"
+testing_model = [merge_columns(nwks16,variable)]
+
+variable = "train_global_model_seconds"
+train_global_model = [merge_columns(nwks16,variable,"T")]
+
+variable = "local_training_seconds"
+local_training = [merge_columns(nwks16,variable,"T")]
+
+variable = "elapsed_time_seconds"
+elapsed_time = [merge_columns(nwks16,variable)]
+
+boxplot(maxmim,label="maxmim",title="16 nodes (seconds)",outliers=false,legend=:topleft)
+boxplot!(clustering,label="clustering",outliers=false)
+boxplot!(create_histogram,label="create_histogram",outliers=false)
+boxplot!(testing_model,label="testing_model",outliers=false)
+boxplot!(train_global_model,label="train_global_model",outliers=false)
+boxplot!(local_training,label="local_training",outliers=false)
+boxplot!(elapsed_time,label="elapsed_time",outliers=false)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
