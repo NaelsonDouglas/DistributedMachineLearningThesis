@@ -11,6 +11,9 @@ This repository has the reproducible material for running the experiments of the
 ```bash
 git clone https://github.com/NaelsonDouglas/DistributedMachineLearningThesis.git
 ```
+** In order to generate the plots you'll need to install the folowing packages on your system
+*** apt install libxt6 libxrender1 libxext6 libgl1-mesa-glx libqt5widgets5
+
 
 # Running the experiments
 

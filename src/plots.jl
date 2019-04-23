@@ -1,3 +1,6 @@
+using GR
+using StatPlots
+using Plots
 using CSV
 
 results_folder="../partial_results/"
@@ -83,6 +86,48 @@ function clear_column(column, col_name)
 				push!(result,parse(item[1:length(item)-1])) #removes the '%' symbol
 			end
 		end
+	elseif col_name == "NETI/OD"
+		for item in column
+			if length(item) > 0
+				data = split(item,"/")[1]
+
+				suffix = data[length(data)-2:length(data)]
+
+				data = data[1:(length(data)-2)]
+				data = replace(data,",",".")
+				data = parse(data)
+
+				if suffix == "kB"
+					data = data/1024
+				end
+				push!(result,data)
+			end
+		end
+	elseif col_name == "NETI/OU"
+		for item in column
+			if length(item) > 0
+				data = split(item,"/")[2]
+
+				suffix = data[length(data)-2:length(data)]
+
+				data = data[1:(length(data)-2)]
+				data = replace(data,",",".")
+				data = parse(data)
+
+				if suffix == "kB"
+					data = data/1024
+				end
+
+				push!(result,data)
+			end
+		end
+	elseif col_name == "CPU%"
+		for item in column
+			if length(item) > 0
+				item = parse(replace(item,",","."))
+				push!(result,item)
+			end
+		end
 	end
 	return result
 end
@@ -90,11 +135,11 @@ end
 
 "An auxiliar function to format the output of a single table column.
 It takes the column as a vector and the name of the column and returns well formated vector"
-function merge_columns(tables,col_name)	
+function merge_columns(tables,col_name,modifier="")	
 	result=[]
 	for tbl in tables
 		column = tbl[Symbol(col_name)]		
-		column = clear_column(column,col_name)
+		column = clear_column(column,col_name*modifier)
 		result = vcat(result,column)
 	end	
 	return result
@@ -109,3 +154,18 @@ function boxplot_experiment(tables,col_name)
 	all_columns = merge_columns(tables,col_name)
 	boxplot(all_columns)
 end
+
+nwks2 = container_tables(n_nodes=2)
+nwks8 = container_tables(n_nodes=8)
+nwks16 = container_tables(n_nodes=16)
+
+
+#y=[merge_columns(nwks2,"CPU%"),merge_columns(nwks8,"CPU%"),merge_columns(nwks16,"CPU%")]
+#boxplot(["2 nodes" "8 nodes" "16 nodes"],y,leg=false,outliers=false)
+
+
+
+
+
+
+
