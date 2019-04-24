@@ -80,7 +80,7 @@ end
 "This wouldn't be necessary if I had formated the tables on the file itself when they were being created"
 function clear_column(column, col_name)
 	result=[]
-	if col_name == "CPU%"
+	if col_name == "CPU%" || col_name == "MEM%"
 		for item in column
 			if length(item) > 0
 				push!(result,parse(item[1:length(item)-1])) #removes the '%' symbol
@@ -120,14 +120,16 @@ function clear_column(column, col_name)
 
 				push!(result,data)
 			end
-		end
-	elseif col_name == "CPU%"
-		for item in column
-			if length(item) > 0
-				item = parse(replace(item,",","."))
-				push!(result,item)
-			end
-		end
+		end	
+	elseif (col_name == "calculate_maxmin_secondsT" || col_name == "clustering_time_seconds"||  col_name == "elapsed_time_seconds" || col_name == "create_histogram_seconds"  || col_name == "testing_model_seconds" || col_name == "train_global_model_secondsT" || col_name == "local_training_secondsT")
+		item = column[1] #only 	the master, I.E. the first line, calculates thodr variables
+		if length(item) > 0			
+			push!(result,item)
+		end		
+	elseif (col_name == "calculate_maxmin_seconds" ||  col_name == "train_global_model_seconds" || col_name == "local_training_seconds")		
+		for idx =2:length(column) #The first index is the master total/result. It's plotted only using the 'T' version
+			push!(result,column[idx])
+		end		
 	end
 	return result
 end
@@ -155,13 +157,56 @@ function boxplot_experiment(tables,col_name)
 	boxplot(all_columns)
 end
 
-nwks2 = container_tables(n_nodes=2)
-nwks8 = container_tables(n_nodes=8)
-nwks16 = container_tables(n_nodes=16)
+nwks2 = system_tables(n_nodes=2)
+nwks8 = system_tables(n_nodes=8)
+nwks16 = system_tables(n_nodes=16)
 
 
-#y=[merge_columns(nwks2,"CPU%"),merge_columns(nwks8,"CPU%"),merge_columns(nwks16,"CPU%")]
-#boxplot(["2 nodes" "8 nodes" "16 nodes"],y,leg=false,outliers=false)
+
+
+variable = "local_training_seconds"
+y=[merge_columns(nwks2,variable),merge_columns(nwks8,variable),merge_columns(nwks16,variable)]
+boxplot(["2 nodes" "8 nodes" "16 nodes"],y,leg=false,outliers=false)
+
+variable = "calculate_maxmin_seconds"
+maxmim = [merge_columns(nwks16,variable,"T")]
+
+variable = "clustering_time_seconds"
+clustering = [merge_columns(nwks16,variable)]
+
+variable = "create_histogram_seconds"
+create_histogram = [merge_columns(nwks16,variable)]
+
+variable = "testing_model_seconds"
+testing_model = [merge_columns(nwks16,variable)]
+
+variable = "train_global_model_seconds"
+train_global_model = [merge_columns(nwks16,variable,"T")]
+
+variable = "local_training_seconds"
+local_training = [merge_columns(nwks16,variable,"T")]
+
+variable = "elapsed_time_seconds"
+elapsed_time = [merge_columns(nwks16,variable)]
+
+boxplot(maxmim,label="maxmim",title="16 nodes (seconds)",outliers=false,legend=:topleft)
+boxplot!(clustering,label="clustering",outliers=false)
+boxplot!(create_histogram,label="create_histogram",outliers=false)
+boxplot!(testing_model,label="testing_model",outliers=false)
+boxplot!(train_global_model,label="train_global_model",outliers=false)
+boxplot!(local_training,label="local_training",outliers=false)
+boxplot!(elapsed_time,label="elapsed_time",outliers=false)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
