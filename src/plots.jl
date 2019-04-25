@@ -198,12 +198,12 @@ function join_boxplots(dataset,variables,configuration="",unit="Seconds")
 end
 
 
-data_size = ["1000", "16000","32000"]
-num_nodes = ["2","8","16"]
-seeds = ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234"]
+data_size = ["1000", "16000","32000","64000","*"]
+num_nodes = ["2","8","16","*"]
+seeds = ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234","*"]
 functions = ["f1","f2","f4"]
 dim_functions = Dict("f1"=>"2","f2"=>"3","f4"=>"5")
-num_neighboors = ["2","4"]
+num_neighboors = ["2","4","*"]
 
 #system_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
 for idx_functions in functions              
@@ -214,11 +214,12 @@ for idx_functions in functions
       
             	dataset = system_tables(n_nodes=idx_num_nodes,data_size=idx_data_size,func=idx_functions,seed=idx_seeds,dim=dim_functions[idx_functions])
 				
-				config = idx_num_nodes*"-"*idx_data_size*"-"*idx_seeds*"-"*idx_num_neighboors*"-"* dim_functions[idx_functions]*"-summary"
-	
+				config = idx_num_nodes*"-"*idx_data_size*"-"*idx_functions*"-"*idx_seeds*"-"*idx_num_neighboors*"-"* dim_functions[idx_functions]*"-summary"
+				config = replace(config,"*","[ALL]")	
 				if length(dataset)>0
 					join_boxplots(dataset,system_variables,config,"Seconds")
 				end
+				
 
               end #data_size                    
             end #seeds  
