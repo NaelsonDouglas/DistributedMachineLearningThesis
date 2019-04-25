@@ -1,4 +1,3 @@
-using GR
 using StatPlots
 using Plots
 using CSV
@@ -161,14 +160,14 @@ nwks2 = system_tables(n_nodes=2)
 nwks8 = system_tables(n_nodes=8)
 nwks16 = system_tables(n_nodes=16)
 
-function create_boxplot(dataset,variable_name,modifier="";_title="",_outlier=true,_color=:white,_legend=:topleft,_ylabel="Seconds")
+function create_boxplot(dataset,variable_name,modifier,id;_title="",_outlier=true,_color=:white,_legend=:topleft,_ylabel="Seconds")
 	plot_data = [merge_columns(dataset,variable_name,modifier)]
-	boxplot(plot_data,label=split(variable_name,"_seconds")[1],title=_title,outliers=_outlier,legend=_legend,color=_color,ylabel=_ylabel)
+	boxplot(plot_data,label=string(id)*" "*split(variable_name,"_seconds")[1],title=_title,outliers=_outlier,legend=_legend,color=_color,ylabel=_ylabel)
 end
 
-function add_boxplot!(dataset,variable_name,modifier="";_outlier=true,_color=:white)
+function add_boxplot!(dataset,variable_name,modifier,id;_outlier=true,_color=:white)
 	plot_data = [merge_columns(dataset,variable_name,modifier)]
-	boxplot!(plot_data,label=split(variable_name,"_seconds")[1],outliers=_outlier,color=_color)
+	boxplot!(plot_data,label=string(id)*" "*split(variable_name,"_seconds")[1],outliers=_outlier,color=_color)
 end
 
 system_variables = [["local_training_seconds",""],
@@ -187,9 +186,9 @@ function join_boxplots(dataset,variables,configuration="",unit="Seconds")
 	p=-1
 	for var_idx = 1:length(variables)		
 		if var_idx == 1			
-			p=create_boxplot(dataset,variables[var_idx][1],variables[var_idx][2],_title=configuration,_ylabel=unit)
+			p=create_boxplot(dataset,variables[var_idx][1],variables[var_idx][2],var_idx,_title=configuration,_ylabel=unit)
 		else
-			add_boxplot!(dataset,variables[var_idx][1],variables[var_idx][2])
+			add_boxplot!(dataset,variables[var_idx][1],variables[var_idx][2],var_idx)
 		end
 	end
 	if p.n>=1
@@ -201,8 +200,8 @@ end
 data_size = ["1000", "16000","32000","64000","*"]
 num_nodes = ["2","8","16","*"]
 seeds = ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234","*"]
-functions = ["f1","f2","f4"]
-dim_functions = Dict("f1"=>"2","f2"=>"3","f4"=>"5")
+functions = ["f1","f2","f4","*"]
+dim_functions = Dict("f1"=>"2","f2"=>"3","f4"=>"5","*"=>"*")
 num_neighboors = ["2","4","*"]
 
 #system_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
@@ -210,16 +209,14 @@ for idx_functions in functions
     for idx_num_nodes in num_nodes
         for idx_num_neighboors in num_neighboors  
           for idx_seeds in seeds
-            for idx_data_size in data_size
-      
+            for idx_data_size in data_size      
             	dataset = system_tables(n_nodes=idx_num_nodes,data_size=idx_data_size,func=idx_functions,seed=idx_seeds,dim=dim_functions[idx_functions])
 				
 				config = idx_num_nodes*"-"*idx_data_size*"-"*idx_functions*"-"*idx_seeds*"-"*idx_num_neighboors*"-"* dim_functions[idx_functions]*"-summary"
 				config = replace(config,"*","[ALL]")	
 				if length(dataset)>0
 					join_boxplots(dataset,system_variables,config,"Seconds")
-				end
-				
+				end		
 
               end #data_size                    
             end #seeds  

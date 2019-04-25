@@ -13,6 +13,8 @@ git clone https://github.com/NaelsonDouglas/DistributedMachineLearningThesis.git
 ```
 ** In order to generate the plots you'll need to install the folowing packages on your system
 *** apt install libxt6 libxrender1 libxext6 libgl1-mesa-glx libqt5widgets5
+If you get the warning "dbind-WARNING **: 09:57:13.231: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files", you can solve it with:
+*** sudo apt-get install at-spi2-core
 
 
 # Running the experiments
