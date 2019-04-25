@@ -161,45 +161,70 @@ nwks2 = system_tables(n_nodes=2)
 nwks8 = system_tables(n_nodes=8)
 nwks16 = system_tables(n_nodes=16)
 
+function create_boxplot(dataset,variable_name,modifier="";_title="",_outlier=true,_color=:white,_legend=:topleft,_ylabel="Seconds")
+	plot_data = [merge_columns(dataset,variable_name,modifier)]
+	boxplot(plot_data,label=split(variable_name,"_seconds")[1],title=_title,outliers=_outlier,legend=_legend,color=_color,ylabel=_ylabel)
+end
 
+function add_boxplot!(dataset,variable_name,modifier="";_outlier=true,_color=:white)
+	plot_data = [merge_columns(dataset,variable_name,modifier)]
+	boxplot!(plot_data,label=split(variable_name,"_seconds")[1],outliers=_outlier,color=_color)
+end
 
-
-variable = "local_training_seconds"
-y=[merge_columns(nwks2,variable),merge_columns(nwks8,variable),merge_columns(nwks16,variable)]
-boxplot(["2 nodes" "8 nodes" "16 nodes"],y,leg=false,outliers=false)
-
-variable = "calculate_maxmin_seconds"
-maxmim = [merge_columns(nwks16,variable,"T")]
-
-variable = "clustering_time_seconds"
-clustering = [merge_columns(nwks16,variable)]
-
-variable = "create_histogram_seconds"
-create_histogram = [merge_columns(nwks16,variable)]
-
-variable = "testing_model_seconds"
-testing_model = [merge_columns(nwks16,variable)]
-
-variable = "train_global_model_seconds"
-train_global_model = [merge_columns(nwks16,variable,"T")]
-
-variable = "local_training_seconds"
-local_training = [merge_columns(nwks16,variable,"T")]
-
-variable = "elapsed_time_seconds"
-elapsed_time = [merge_columns(nwks16,variable)]
-
-boxplot(maxmim,label="maxmim",title="16 nodes (seconds)",outliers=false,legend=:topleft)
-boxplot!(clustering,label="clustering",outliers=false)
-boxplot!(create_histogram,label="create_histogram",outliers=false)
-boxplot!(testing_model,label="testing_model",outliers=false)
-boxplot!(train_global_model,label="train_global_model",outliers=false)
-boxplot!(local_training,label="local_training",outliers=false)
-boxplot!(elapsed_time,label="elapsed_time",outliers=false)
+system_variables = [["local_training_seconds",""],
+					["calculate_maxmin_seconds","T"],
+					["clustering_time_seconds",""],
+					["create_histogram_seconds",""],
+					["testing_model_seconds",""],
+					["train_global_model_seconds","T"],
+					["local_training_seconds","T"],
+					["elapsed_time_seconds",""]]
 
 
 
 
+function join_boxplots(dataset,variables,configuration="",unit="Seconds")
+	p=-1
+	for var_idx = 1:length(variables)		
+		if var_idx == 1			
+			p=create_boxplot(dataset,variables[var_idx][1],variables[var_idx][2],_title=configuration,_ylabel=unit)
+		else
+			add_boxplot!(dataset,variables[var_idx][1],variables[var_idx][2])
+		end
+	end
+	if p.n>=1
+		Plots.savefig(p,"../plots/"*configuration*".png")
+	end
+end
+
+
+data_size = ["1000", "16000","32000"]
+num_nodes = ["2","8","16"]
+seeds = ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234"]
+functions = ["f1","f2","f4"]
+dim_functions = Dict("f1"=>"2","f2"=>"3","f4"=>"5")
+num_neighboors = ["2","4"]
+
+#system_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
+for idx_functions in functions              
+    for idx_num_nodes in num_nodes
+        for idx_num_neighboors in num_neighboors  
+          for idx_seeds in seeds
+            for idx_data_size in data_size
+      
+            	dataset = system_tables(n_nodes=idx_num_nodes,data_size=idx_data_size,func=idx_functions,seed=idx_seeds,dim=dim_functions[idx_functions])
+				
+				config = idx_num_nodes*"-"*idx_data_size*"-"*idx_seeds*"-"*idx_num_neighboors*"-"* dim_functions[idx_functions]*"-summary"
+	
+				if length(dataset)>0
+					join_boxplots(dataset,system_variables,config,"Seconds")
+				end
+
+              end #data_size                    
+            end #seeds  
+        end #idx_num_neighboors
+    end #num_nodes  
+  end #functions
 
 
 
