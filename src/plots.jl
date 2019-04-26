@@ -98,6 +98,8 @@ function clear_column(column, col_name)
 
 				if suffix == "kB"
 					data = data/1024
+				elseif suffix == "B"
+					data = (data/1024)/1024
 				end
 				push!(result,data)
 			end
@@ -115,11 +117,53 @@ function clear_column(column, col_name)
 
 				if suffix == "kB"
 					data = data/1024
+				elseif suffix == "B"
+					data = (data/1024)/1024
 				end
 
 				push!(result,data)
 			end
 		end	
+	elseif col_name == "BLOCKI/OW"
+		for item in column
+			if length(item) > 0
+				data = split(item,"/")[1]
+
+				suffix = data[length(data)-2:length(data)]
+
+				data = data[1:(length(data)-2)]
+				data = replace(data,",",".")
+				data = parse(data)
+
+				if suffix == "kB"
+					data = data/1024
+				elseif suffix == "B"
+					data = (data/1024)/1024
+				end
+
+				push!(result,data)
+			end
+		end
+	elseif col_name == "BLOCKI/OR"
+		for item in column
+			if length(item) > 0
+				data = split(item,"/")[2]
+
+				suffix = data[length(data)-2:length(data)]
+
+				data = data[1:(length(data)-2)]
+				data = replace(data,",",".")
+				data = parse(data)
+
+				if suffix == "kB"
+					data = data/1024
+				elseif suffix == "B"
+					data = (data/1024)/1024
+				end
+
+				push!(result,data)
+			end
+		end
 	elseif (col_name == "calculate_maxmin_secondsT" || col_name == "clustering_time_seconds"||  col_name == "elapsed_time_seconds" || col_name == "create_histogram_seconds"  || col_name == "testing_model_seconds" || col_name == "train_global_model_secondsT" || col_name == "local_training_secondsT")
 		item = column[1] #only 	the master, I.E. the first line, calculates thodr variables
 		if length(item) > 0			
@@ -139,7 +183,7 @@ It takes the column as a vector and the name of the column and returns well form
 function merge_columns(tables,col_name,modifier="")	
 	result=[]
 	for tbl in tables
-		column = tbl[Symbol(col_name)]		
+		column = tbl[Symbol(col_name)]
 		column = clear_column(column,col_name*modifier)
 		result = vcat(result,column)
 	end	
@@ -162,24 +206,34 @@ nwks16 = system_tables(n_nodes=16)
 
 function create_boxplot(dataset,variable_name,modifier,id;_title="",_outlier=true,_color=:white,_legend=:topleft,_ylabel="Seconds")
 	plot_data = [merge_columns(dataset,variable_name,modifier)]
-	boxplot(plot_data,label=string(id)*" "*split(variable_name,"_seconds")[1],title=_title,outliers=_outlier,legend=_legend,color=_color,ylabel=_ylabel)
+	
+	full_modifier=""
+	if modifier == "W"
+		full_modifier = " (WRITE)"
+	elseif modifier == "R"
+		full_modifier = " (READ)"
+	elseif modifier == "D"
+		full_modifier = " (DOWN)"
+	elseif modifier == "U"
+		full_modifier = " (UP)"		
+	end
+	boxplot(plot_data,label=string(id)*" "*split(variable_name,"_seconds")[1]*full_modifier,title=_title,outliers=_outlier,legend=_legend,color=_color,ylabel=_ylabel)
 end
 
 function add_boxplot!(dataset,variable_name,modifier,id;_outlier=true,_color=:white)
 	plot_data = [merge_columns(dataset,variable_name,modifier)]
-	boxplot!(plot_data,label=string(id)*" "*split(variable_name,"_seconds")[1],outliers=_outlier,color=_color)
+	full_modifier=""
+	if modifier == "W"
+		full_modifier = " (WRITE)"
+	elseif modifier == "R"
+		full_modifier = " (READ)"
+	elseif modifier == "D"
+		full_modifier = " (DOWN)"
+	elseif modifier == "U"
+		full_modifier = " (UP)"		
+	end
+	boxplot!(plot_data,label=string(id)*" "*split(variable_name,"_seconds")[1]*full_modifier,outliers=_outlier,color=_color)
 end
-
-system_variables = [["local_training_seconds",""],
-					["calculate_maxmin_seconds","T"],
-					["clustering_time_seconds",""],
-					["create_histogram_seconds",""],
-					["testing_model_seconds",""],
-					["train_global_model_seconds","T"],
-					["local_training_seconds","T"],
-					["elapsed_time_seconds",""]]
-
-
 
 
 function join_boxplots(dataset,variables,configuration="",unit="Seconds")
@@ -204,19 +258,43 @@ functions = ["f1","f2","f4","*"]
 dim_functions = Dict("f1"=>"2","f2"=>"3","f4"=>"5","*"=>"*")
 num_neighboors = ["2","4","*"]
 
+
+
+system_variables = [["local_training_seconds",""],
+					["calculate_maxmin_seconds","T"],
+					["clustering_time_seconds",""],
+					["create_histogram_seconds",""],
+					["testing_model_seconds",""],
+					["train_global_model_seconds","T"],
+					["local_training_seconds","T"],
+					["elapsed_time_seconds",""]]
+
+
+container_variables_1 = [["MEM%",""],
+						 ["CPU%",""]]
+
+container_variables_2 = [["NETI/O","D"],
+						 ["NETI/O","U"]]
+
+
 #system_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
 for idx_functions in functions              
     for idx_num_nodes in num_nodes
         for idx_num_neighboors in num_neighboors  
           for idx_seeds in seeds
             for idx_data_size in data_size      
-            	dataset = system_tables(n_nodes=idx_num_nodes,data_size=idx_data_size,func=idx_functions,seed=idx_seeds,dim=dim_functions[idx_functions])
+            	#system_dataset = system_tables(n_nodes=idx_num_nodes,data_size=idx_data_size,func=idx_functions,seed=idx_seeds,dim=dim_functions[idx_functions])
+            	containers_dataset = container_tables(n_nodes=idx_num_nodes,data_size=idx_data_size,func=idx_functions,seed=idx_seeds,dim=dim_functions[idx_functions])
 				
 				config = idx_num_nodes*"-"*idx_data_size*"-"*idx_functions*"-"*idx_seeds*"-"*idx_num_neighboors*"-"* dim_functions[idx_functions]*"-summary"
 				config = replace(config,"*","[ALL]")	
-				if length(dataset)>0
-					join_boxplots(dataset,system_variables,config,"Seconds")
-				end		
+				#if length(system_dataset)>0
+				#	join_boxplots(system_dataset,system_variables,config,"Seconds")
+				#end	
+
+				if length(containers_dataset) > 0
+					join_boxplots(containers_dataset,container_variables_2,config,"Megabytes")
+				end	
 
               end #data_size                    
             end #seeds  
