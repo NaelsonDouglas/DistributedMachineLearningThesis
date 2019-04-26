@@ -308,7 +308,9 @@ for idx_functions in functions
 				if length(containers_dataset) > 0
 					join_boxplots(containers_dataset,container_variables_1,config,"Percentage (%) \n Total memory: 1.9GB","containers/mem_cpu",axis_label=true)
 					join_boxplots(containers_dataset,container_variables_2,config,"Megabytes","containers/net_io",axis_label=true)
-					join_boxplots(containers_dataset,container_variables_3,config,"Megabytes","containers/disk",axis_label=true)
+					try #There are some tables where the columnI/O and JULIA_PIDS are changed and it's causing some errors. I'll fix it later
+						join_boxplots(containers_dataset,container_variables_3,config,"Megabytes","containers/disk",axis_label=true)
+					end
 				end	
 
               end #data_size                    
