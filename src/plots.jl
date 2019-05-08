@@ -1,4 +1,3 @@
-using GR
 using StatPlots
 using Plots
 using CSV
@@ -86,36 +85,76 @@ function clear_column(column, col_name)
 				push!(result,parse(item[1:length(item)-1])) #removes the '%' symbol
 			end
 		end
-	elseif col_name == "NETI/OD"
+	elseif col_name == "NETI/OD" || col_name == "NETI/OU"
 		for item in column
-			if length(item) > 0
-				data = split(item,"/")[1]
+			if length(item) > 0				
+				if col_name == "NETI/OD"
+					data = split(item,"/")[1]
+				else
+					data = split(item,"/")[2]
+				end
 
-				suffix = data[length(data)-2:length(data)]
+				suffix = ""
 
-				data = data[1:(length(data)-2)]
+				if contains(data,"MB")
+					suffix = "MB"
+				elseif contains(data,"kB")
+					suffix = "kB"
+				elseif contains(data, "B")
+					suffix = "B"
+				elseif contains(data, "GB")
+					suffix = "GB"
+				end
+
+
+				data = split(data,suffix)[1]
 				data = replace(data,",",".")
 				data = parse(data)
 
-				if suffix == "kB"
+				if suffix == "kB"					
 					data = data/1024
+				elseif suffix == "B"
+					data = (data/1024)/1024
+				elseif suffix == "GB"
+					data = 1024*data
 				end
 				push!(result,data)
 			end
-		end
-	elseif col_name == "NETI/OU"
+		end	
+	elseif col_name == "BLOCKI/OW" || col_name == "BLOCKI/OR"
 		for item in column
 			if length(item) > 0
-				data = split(item,"/")[2]
+				data=""
+				try #In some tables the column colum header is swapet with JULIA/PIDS. It was an error (now corrected), but a few tables are yet affected by it.
+					#TODO fix the tables and remove this try block
+					if col_name == "BLOCKI/OW"					
+						data = split(item,"/")[1]
+					else
+						data = split(item,"/")[2]
+					end
 
-				suffix = data[length(data)-2:length(data)]
+					suffix = ""
 
-				data = data[1:(length(data)-2)]
-				data = replace(data,",",".")
-				data = parse(data)
+					if contains(data,"MB")
+						suffix = "MB"
+					elseif contains(data,"kB")
+						suffix = "kB"
+					elseif contains(data, "B")
+						suffix = "B"
+					elseif contains(data, "GB")
+						suffix = "GB"
+					end
+					
 
-				if suffix == "kB"
-					data = data/1024
+					data = split(data,suffix)[1]
+					data = replace(data,",",".")
+					data = parse(data)
+
+					if suffix == "kB"
+						data = data/1024
+					elseif suffix == "B"
+						data = (data/1024)/1024
+					end
 				end
 
 				push!(result,data)
@@ -140,7 +179,7 @@ It takes the column as a vector and the name of the column and returns well form
 function merge_columns(tables,col_name,modifier="")	
 	result=[]
 	for tbl in tables
-		column = tbl[Symbol(col_name)]		
+		column = tbl[Symbol(col_name)]
 		column = clear_column(column,col_name*modifier)
 		result = vcat(result,column)
 	end	
@@ -161,45 +200,124 @@ nwks2 = system_tables(n_nodes=2)
 nwks8 = system_tables(n_nodes=8)
 nwks16 = system_tables(n_nodes=16)
 
+function create_boxplot(dataset,variable_name,modifier,id;_title="",_outlier=true,_color="#D3D3D3",_legend=:topleft,_ylabel="Seconds",_axis_label=false)
+	plot_data = [merge_columns(dataset,variable_name,modifier)]
+	
+	full_modifier=""
+	if modifier == "W"
+		full_modifier = " (WRITE)"
+	elseif modifier == "R"
+		full_modifier = " (READ)"
+	elseif modifier == "D"
+		full_modifier = " (DOWN)"
+	elseif modifier == "U"
+		full_modifier = " (UP)"		
+	end
+	lbl = split(variable_name,"_seconds")[1]*full_modifier
+	if _axis_label
+		boxplot([lbl],plot_data,label="",title=_title,outliers=_outlier,legend=_legend,color=_color,ylabel=_ylabel)
+	else
+		lbl = string(id)*" "*lbl
+		boxplot(plot_data,label=lbl,title=_title,outliers=_outlier,legend=_legend,color=_color,ylabel=_ylabel)
+	end
+end
+
+function add_boxplot!(dataset,variable_name,modifier,id;_outlier=true,_color="#D3D3D3",_axis_label=false)
+	plot_data = [merge_columns(dataset,variable_name,modifier)]
+	full_modifier=""
+	if modifier == "W"
+		full_modifier = " (WRITE)"
+	elseif modifier == "R"
+		full_modifier = " (READ)"
+	elseif modifier == "D"
+		full_modifier = " (DOWN)"
+	elseif modifier == "U"
+		full_modifier = " (UP)"		
+	end
+	lbl = split(variable_name,"_seconds")[1]*full_modifier
+	if _axis_label		
+		boxplot!([lbl],plot_data,label="",outliers=_outlier,color=_color)
+	else
+		lbl = string(id)*" "*lbl
+		boxplot!(plot_data,label=lbl,outliers=_outlier,color=_color)
+	end
+end
+
+
+function join_boxplots(dataset,variables,configuration="",unit="Seconds",subfolder::String="system";axis_label=false)
+	p=-1
+	for var_idx = 1:length(variables)		
+		if var_idx == 1			
+						p=create_boxplot(dataset,variables[var_idx][1],variables[var_idx][2],var_idx,_title=configuration,_ylabel=unit,_axis_label=axis_label)
+		else
+			
+			add_boxplot!(dataset,variables[var_idx][1],variables[var_idx][2],var_idx,_axis_label=axis_label)
+		end
+	end
+	if p.n>=1
+		Plots.savefig(p,"../plots/"*subfolder*"/"*configuration*".png")
+	end
+end
+
+
+data_size = ["1000", "16000","32000","64000","*"]
+num_nodes = ["8","16","*"]
+seeds = ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234","*"]
+functions = ["f1","f2","f4","*"]
+dim_functions = Dict("f1"=>"2","f2"=>"3","f4"=>"5","*"=>"*")
+num_neighboors = ["2","4","*"]
 
 
 
-variable = "local_training_seconds"
-y=[merge_columns(nwks2,variable),merge_columns(nwks8,variable),merge_columns(nwks16,variable)]
-boxplot(["2 nodes" "8 nodes" "16 nodes"],y,leg=false,outliers=false)
-
-variable = "calculate_maxmin_seconds"
-maxmim = [merge_columns(nwks16,variable,"T")]
-
-variable = "clustering_time_seconds"
-clustering = [merge_columns(nwks16,variable)]
-
-variable = "create_histogram_seconds"
-create_histogram = [merge_columns(nwks16,variable)]
-
-variable = "testing_model_seconds"
-testing_model = [merge_columns(nwks16,variable)]
-
-variable = "train_global_model_seconds"
-train_global_model = [merge_columns(nwks16,variable,"T")]
-
-variable = "local_training_seconds"
-local_training = [merge_columns(nwks16,variable,"T")]
-
-variable = "elapsed_time_seconds"
-elapsed_time = [merge_columns(nwks16,variable)]
-
-boxplot(maxmim,label="maxmim",title="16 nodes (seconds)",outliers=false,legend=:topleft)
-boxplot!(clustering,label="clustering",outliers=false)
-boxplot!(create_histogram,label="create_histogram",outliers=false)
-boxplot!(testing_model,label="testing_model",outliers=false)
-boxplot!(train_global_model,label="train_global_model",outliers=false)
-boxplot!(local_training,label="local_training",outliers=false)
-boxplot!(elapsed_time,label="elapsed_time",outliers=false)
+system_variables = [["local_training_seconds",""],
+					["calculate_maxmin_seconds","T"],
+					["clustering_time_seconds",""],
+					["create_histogram_seconds",""],
+					["testing_model_seconds",""],
+					["train_global_model_seconds","T"],
+					["local_training_seconds","T"],
+					["elapsed_time_seconds",""]]
 
 
+container_variables_1 = [["MEM%",""],
+						 ["CPU%",""]]
+
+container_variables_2 = [["NETI/O","D"],
+						 ["NETI/O","U"]]
+
+container_variables_3 = [["BLOCKI/O","W"],
+						 ["BLOCKI/O","R"]]
 
 
+#system_tables(;n_nodes="*",data_size="*",func="*",seed="*",neighboors="*",dim="*")
+containers_dataset=-1
+for idx_functions in functions              
+    for idx_num_nodes in num_nodes
+        for idx_num_neighboors in num_neighboors  
+          for idx_seeds in seeds
+            for idx_data_size in data_size      
+            	system_dataset = system_tables(n_nodes=idx_num_nodes,data_size=idx_data_size,func=idx_functions,seed=idx_seeds,dim=dim_functions[idx_functions])
+            	containers_dataset = container_tables(n_nodes=idx_num_nodes,data_size=idx_data_size,func=idx_functions,seed=idx_seeds,dim=dim_functions[idx_functions])
+				
+				config = idx_num_nodes*"-"*idx_data_size*"-"*idx_functions*"-"*idx_seeds*"-"*idx_num_neighboors*"-"* dim_functions[idx_functions]*"-summary"
+				config = replace(config,"*","[ALL]")	
+				if length(system_dataset)>0
+					join_boxplots(system_dataset,system_variables,config,"Seconds","system",axis_label=false)
+				end	
+
+				if length(containers_dataset) > 0
+					join_boxplots(containers_dataset,container_variables_1,config,"Percentage (%) \n Total memory: 1.9GB","containers/mem_cpu",axis_label=true)
+					join_boxplots(containers_dataset,container_variables_2,config,"Megabytes","containers/net_io",axis_label=true)
+					try #There are some tables where the columnI/O and JULIA_PIDS are changed and it's causing some errors. I'll fix it later
+						join_boxplots(containers_dataset,container_variables_3,config,"Megabytes","containers/disk",axis_label=true)
+					end
+				end	
+
+              end #data_size                    
+            end #seeds  
+        end #idx_num_neighboors
+    end #num_nodes  
+  end #functions
 
 
 
