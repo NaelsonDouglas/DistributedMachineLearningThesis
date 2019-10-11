@@ -2,13 +2,14 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import glob
-os.chdir("/home/ndc/repos/DistributedMachineLearningThesis/partial_results")
+src_folder = '/home/ndc/repos/'
+os.chdir(src_folder+'DistributedMachineLearningThesis/partial_results')
 
 
 data_size = ["1000", "16000","32000","64000","*"]
 num_nodes = ["8","16","*"]
 seeds = ["1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234","*"]
-function = ["f1"]
+function = ["f1","f2","*"]
 num_neighboors = ["2","4","*"]
 
 
@@ -33,7 +34,7 @@ def create_path(folder):
         return os.getcwd()+'/'+folder+'/system.csv'
 
 #It merges the many dataframes (one for each csv) in a single dataframe
-def create_table(pattern):        
+def create_table(pattern):     
         folders = glob.glob(pattern)        
         dfs = []
         df = -1        
@@ -43,30 +44,14 @@ def create_table(pattern):
         try:
                         df = pd.concat(dfs)                        
                         df = df.drop(['MAPE', 'MSE','R2'], axis=1)                        
-                        df.columns = ['calculate_maxmin','clustering_time','elapsed_time','create_histogram','testing_model','train_global_model','local_training']  
-                        df =  df[['local_training','calculate_maxmin','clustering_time','create_histogram','testing_model','train_global_model','elapsed_time']]                                                                        
+                        df.columns = ['calculate_maxmin','clustering_time','elapsed_time','create_summary','testing_model','train_global_model','local_training']  
+                        df =  df[['local_training','calculate_maxmin','clustering_time','create_summary','testing_model','train_global_model','elapsed_time']]                                                                        
         except:
                 return False
                 
         if len(df) == 0:
                 return False
         return df
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def create_plot(pattern):
@@ -79,17 +64,23 @@ def create_plot(pattern):
         local_training = df['local_training']
         calculate_maxmin = df['calculate_maxmin']
         clustering_time = df[(df.clustering_time > 0)]['clustering_time']
-        create_histogram = df[(df.create_histogram > 0) ]['create_histogram']
+        create_summary = df[(df.create_summary > 0) ]['create_summary']
         testing_model = df[(df.testing_model > 0)]['testing_model']
         train_global_model = df['train_global_model']
-        elapsed_time = df[(df.elapsed_time > 0)]['elapsed_time']      
+        elapsed_time = df[(df.elapsed_time > 0)]['elapsed_time']
 
         fig = plt.figure(1, figsize=(9, 6))
         ax = fig.add_subplot(111)
 
-        lbls = ['local_training','calculate_maxmin','clustering_time','create_histogram','testing_model','train_global_model','elapsed_time']
-        bp = ax.boxplot([local_training,calculate_maxmin,clustering_time,create_histogram,testing_model,train_global_model,elapsed_time],labels=lbls,patch_artist=True)
+        lbls = ['1 local_training','2 calculate_maxmin','3 clustering_time','4 create_summary','5 testing_model','6 train_global_model','7 elapsed_time']
+        
+        bp = ax.boxplot([local_training,calculate_maxmin,clustering_time,create_summary,testing_model,train_global_model,elapsed_time],patch_artist=True)
+        #legend = ax.legend(lbls,handletextpad=-2.0, handlelength=0)
+        ax.legend(lbls,markerscale=0, handlelength=0)
+        #ax.legend(handletextpad=-2.0, handlelength=0)
 
+        
+        
         ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
         ax.xaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)               
 
@@ -103,7 +94,7 @@ def create_plot(pattern):
         ## change outline color, fill color and linewidth of the boxes
         for box in bp['boxes']:
                 # change outline color
-                box.set( color=lines_color, linewidth=2)
+                box.set( color=lines_color, linewidth=1)
                 # change fill color
                 box.set( facecolor = body_color )
 
@@ -113,11 +104,11 @@ def create_plot(pattern):
 
         ## change color and linewidth of the caps
         for cap in bp['caps']:
-                cap.set(color=body_color, linewidth=2)
+                cap.set(color=body_color, linewidth=1)
 
         ## change color and linewidth of the medians
         for median in bp['medians']:
-                median.set(color=lines_color, linewidth=2)
+                median.set(color=lines_color, linewidth=1)
 
         ## change the style of fliers and their fill
         for flier in bp['fliers']:
@@ -134,7 +125,5 @@ for current_pattern in patterns:
         if current_pattern != False:        
                 fig,filename = create_plot(current_pattern)
                 if type(fig) != bool:
-                        output_folder = '/home/ndc/repos/DistributedMachineLearningThesis/plots/system/'
-                        fig.savefig(output_folder+filename, bbox_inches='tight')
-
-
+                        output_folder = src_folder+'DistributedMachineLearningThesis/plots/system/'
+                        fig.savefig(output_folder+filename, bbox_inches='tight',dpi=640)
