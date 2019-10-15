@@ -45,7 +45,7 @@ def create_table(pattern):
                         df = pd.concat(dfs)                        
                         df = df.drop(['MAPE', 'MSE','R2'], axis=1)                        
                         df.columns = ['calculate_maxmin','clustering_time','elapsed_time','create_summary','testing_model','train_global_model','local_training']  
-                        df =  df[['local_training','calculate_maxmin','clustering_time','create_summary','testing_model','train_global_model','elapsed_time']]                                                                        
+                        #df =  df[['local_training','calculate_maxmin','clustering_time','create_summary','testing_model','train_global_model','elapsed_time']]
         except:
                 return False
                 
@@ -72,9 +72,10 @@ def create_plot(pattern):
         fig = plt.figure(1, figsize=(9, 6))
         ax = fig.add_subplot(111)
 
-        lbls = ['1 local_training','2 calculate_maxmin','3 clustering_time','4 create_summary','5 testing_model','6 train_global_model','7 elapsed_time']
+        lbls = ['1 calculate_order_stats()','2 generate_neighborhoods(order_statistics)','3 first_local_model_training','4 second_local_model_training(neighborhood)','5 Model validation','6 Total time']
         
-        bp = ax.boxplot([local_training,calculate_maxmin,clustering_time,create_summary,testing_model,train_global_model,elapsed_time],patch_artist=True)
+        #bp = ax.boxplot([local_training,calculate_maxmin,clustering_time,create_summary,testing_model,train_global_model,elapsed_time],patch_artist=True)
+        bp = ax.boxplot([create_summary,clustering_time,local_training,train_global_model,testing_model,elapsed_time],patch_artist=True)
         #legend = ax.legend(lbls,handletextpad=-2.0, handlelength=0)
         ax.legend(lbls,markerscale=0, handlelength=0)
         #ax.legend(handletextpad=-2.0, handlelength=0)
@@ -86,7 +87,7 @@ def create_plot(pattern):
 
         ax.set_ylabel('Seconds',fontsize=18)
         title = pattern[0:len(pattern)-1]+'-summary'
-        plt.title(title.replace('*','[ALL]'),fontsize = 20)
+        #plt.title(title.replace('*','[ALL]'),fontsize = 20)
 
 
         body_color = '#b3b6ba'
@@ -126,4 +127,5 @@ for current_pattern in patterns:
                 fig,filename = create_plot(current_pattern)
                 if type(fig) != bool:
                         output_folder = src_folder+'DistributedMachineLearningThesis/plots/system/'
+                        #plt.show()                        
                         fig.savefig(output_folder+filename, bbox_inches='tight',dpi=640)
