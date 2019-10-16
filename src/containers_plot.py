@@ -41,12 +41,14 @@ def create_table(pattern):
         for folder in folders:                
                 path = create_path(folder)
                 dfs.append(pd.read_csv(path))           
-        
-        df = pd.concat(dfs)
-        if len(df) == 0:
+        try:
+                df = pd.concat(dfs)
+                if len(df) == 0:
+                        return False
+                df = df[['MEM%','CPU%','NETI/O','BLOCKI/O']]
+                return df
+        except:
                 return False
-        df = df[['MEM%','CPU%','NETI/O','BLOCKI/O']]
-        return df
 
 
 
@@ -96,39 +98,16 @@ def chopPercentage(dataframe,column):
         return df[column]
 
 
-df = create_table(patterns[2])
 
 
 
-cpu = chopPercentage(df,'CPU%')
-mem = chopPercentage(df,'MEM%')
 
 
-df = df.drop(['CPU%','MEM%'], axis=1)
 
-net = df['NETI/O'].str.split("/",expand=True)
-net.columns = ['INPUT','OUTPUT']
-df = df.drop(['NETI/O'], axis=1)
-
-disk = df['BLOCKI/O'].str.split("/",expand=True)
-disk.columns = ['INPUT','OUTPUT']
-df = df.drop(['BLOCKI/O'], axis=1)      
-
-disk_input = splitColumn(disk,'INPUT')
-disk_output = splitColumn(disk,'OUTPUT')
-
-
-net_input = splitColumn(net,'INPUT')
-net_output = splitColumn(net,'OUTPUT')
-
-
-def create_plot(dataframes,ylabel,xlabels,output_dir):
-        
+def create_plot(dataframes,ylabel,xlabels):       
 
         fig = plt.figure(1, figsize=(9, 6))
-        ax = fig.add_subplot(111)
-
-        
+        ax = fig.add_subplot(111)       
         
         
         bp = ax.boxplot(dataframes,labels=xlabels,patch_artist=True)        
@@ -171,8 +150,54 @@ def create_plot(dataframes,ylabel,xlabels,output_dir):
         #filename = filename.replace('*','[ALL]')
         return fig
 
-create_plot([disk_input,disk_output],'Megabytes',["Read","Write"],"whatever")
-create_plot([net_input,net_output],'Megabytes',["Download","Upload"],"whatever")
-create_plot([cpu,mem],'Percentage (%) \n Total memory: 2048MB',["CPU","MEM"],"whatever")
-plt.show()
-plt.cla()
+
+
+memcpu_dir = "/home/ndc/repos/DistributedMachineLearningThesis/plots/containers/mem_cpu/"
+netio_dir = "/home/ndc/repos/DistributedMachineLearningThesis/plots/containers/net_io/"
+disk_dir = "/home/ndc/repos/DistributedMachineLearningThesis/plots/containers/disk/"
+
+
+def save_plot(fig,destpath,current_pattern):
+        if type(fig) != bool:                        
+                        filename = current_pattern[0:len(current_pattern)-1]+'-summary'                                             
+                        filename = filename.replace('*','[ALL]')+'.png'
+                        print(destpath+filename)                   
+                        fig.savefig(destpath+filename, bbox_inches='tight',dpi=640)
+
+
+for current_pattern in patterns:
+        if current_pattern != False:
+                print(current_pattern)
+                df = create_table(current_pattern)
+                if type(df) != bool:
+                        cpu = chopPercentage(df,'CPU%')
+
+
+
+                        mem = chopPercentage(df,'MEM%')
+                        memcpu_fig = create_plot([mem,cpu],'Percentage (%) \n Total memory: 2048MB',["MEM","CPU"])
+                        save_plot(memcpu_fig,memcpu_dir,current_pattern)                
+                        plt.cla()
+                        
+
+                        net = df['NETI/O'].str.split("/",expand=True)
+                        net.columns = ['INPUT','OUTPUT']
+                        net_input = splitColumn(net,'INPUT')
+                        net_output = splitColumn(net,'OUTPUT')
+                        net_fig = create_plot([net_input,net_output],'Megabytes',["Download","Upload"])
+                        save_plot(net_fig,netio_dir,current_pattern)     
+                        plt.cla()           
+
+                        disk = df['BLOCKI/O'].str.split("/",expand=True)
+                        disk.columns = ['INPUT','OUTPUT']
+                        disk_input = splitColumn(disk,'INPUT')
+                        disk_output = splitColumn(disk,'OUTPUT')
+                        disk_fig = create_plot([disk_input,disk_output],'Megabytes',["Read","Write"])
+                        save_plot(disk_fig,disk_dir,current_pattern)
+                        plt.cla()
+               
+                
+                
+                
+
+
