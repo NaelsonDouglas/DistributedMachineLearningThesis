@@ -59,7 +59,10 @@ def removepercent(x):
 
 #Converts strings like '30 bytes' or '25Kb' to it's integer equivalente in megabytes
 def stringtoMbyte(_inputstring):
-        inputstring = _inputstring.upper()
+        try:
+                inputstring = _inputstring.upper()
+        except:
+                return float(_inputstring)
         multiplier = 1
         if 'GB' in inputstring:
                 multiplier = 1024
@@ -79,9 +82,15 @@ def stringtoMbyte(_inputstring):
 
 #Converts strings like '30 bytes' or '25Kb' to it's integer equivalente in megabytes
 def stringPercentToFloat(_inputstring):
-        inputstring = _inputstring.upper()
-        output = inputstring.replace("%",'')
-        return float(output)
+        output = _inputstring
+        try:
+                inputstring = _inputstring.upper()
+                output = inputstring.replace("%",'')
+                return float(output)
+        except:
+                return float(output)
+
+        
 
 
 
