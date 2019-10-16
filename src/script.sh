@@ -1,10 +1,10 @@
-functions=(f1 f2 f4)
+functions=(f1)
 declare -A dim_functions
-dim_functions=( ["f1"]="2" ["f2"]="3")
+dim_functions=( ["f1"]="2")
 data_size=(16000)
-num_nodes=(16 32)
-seeds=(7777  8888  9999  1234)
-num_neighboors=(4 2)
+num_nodes=(8)
+seeds=(111)
+num_neighboors=(2)
 		for  f in ${functions[@]}
 		do
 			for ds in ${data_size[@]}
@@ -17,7 +17,7 @@ num_neighboors=(4 2)
 						do
 							for num_nei in ${num_neighboors[@]}
 							do	
-								for repetitions	 in {1..10}
+								for repetitions	 in {1..1}
 								do						
 									echo $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]}								
 									timeout 1800 /root/julia/bin/julia ugly_script.jl $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]} summary

@@ -9,12 +9,12 @@
 
 #I'm putting it after the includes because if this is the first time you are executing the code, these includes will take too long to pre-compile and this time will be measured
 
-EXECUTING_PATH = "./results/executing/"
+EXECUTING_PATH = "./results2/executing/"
 start_time = Dates.format(Dates.now(),"yy-mm-dd-HH:MM:SS")
 
 try
-    mkpath("./results/incomplete/")
-    mv(EXECUTING_PATH, string("./results/incomplete/",randstring() ))
+    mkpath("./results2/incomplete/")
+    mv(EXECUTING_PATH, string("./results2/incomplete/",randstring() ))
 
     mkpath(EXECUTING_PATH*"train_global_model")
     mkpath(EXECUTING_PATH*"calculate_maxmin")
@@ -190,18 +190,18 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
     cont_daemon = @async begin
         g=-1
         try
-            g = open("results/executing/containers.csv","w+")
+            g = open("results2/executing/containers.csv","w+")
         catch
             println("Creating executing folder")
-            mkpath("./results/executing")
-            g = open("results/executing/containers.csv","w+")
+            mkpath("./results2/executing")
+            g = open("results2/executing/containers.csv","w+")
         end
         header = "CONTAINER,NAME,CPU%,MEMUSAGE/LIMIT,MEM%,NETI/O,PIDS_JULIA,BLOCKI/O,PIDS_DOCKER,TIMESTAMP"
         write(g,header)
         keep_task = true
         task_failures = 0
         while((nworkers() > 1) && keep_task)
-            sleep(rand(5:15))
+            sleep(1)
             timestamp = start_time = string(Dates.format(Dates.now(),"HH:MM:SS"))
             try
                 for a in analyse_containers()
@@ -497,9 +497,9 @@ function execute_experiment(args)
 
     #experiment_dir = commit*"-"*start_time*"-"*string(seed)*"-"*version
     experiment_dir = string(n_of_procs)*"-"*string(n_of_examples)*"-"*string(funcion)*"-"*string(seed)*"-"*string(num_nodes)*"-"*string(dims)*"-"*string(version)
-    results_folder = "./results/"*experiment_dir
+    results_folder = "./results2/"*experiment_dir
 
-    g = open("results/executing/containers.csv","a+")
+    g = open("results2/executing/containers.csv","a+")
     
     analysis = ones(1) #initializer
    
