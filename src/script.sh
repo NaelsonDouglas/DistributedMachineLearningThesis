@@ -2,8 +2,8 @@ functions=(f1)
 declare -A dim_functions
 dim_functions=( ["f1"]="2")
 data_size=(16000)
-num_nodes=(8)
-seeds=(111)
+num_nodes=(8 16)
+seeds=(1111)
 num_neighboors=(2)
 		for  f in ${functions[@]}
 		do
@@ -17,12 +17,18 @@ num_neighboors=(2)
 						do
 							for num_nei in ${num_neighboors[@]}
 							do	
-								for repetitions	 in {1..1}
+								for repetitions	 in {1..11}
 								do						
 									echo $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]}								
 									timeout 1800 /root/julia/bin/julia ugly_script.jl $n_nodes $ds $f $sds $num_nei ${dim_functions[$f]} summary
+									echo "reseting the environment"
 									nodes=$(docker ps -q | grep -v $(hostname))
-									docker kill $nodes
+									pkill julia
+									docker kill $nodes									
+									echo "Environment reset"
+									docker ps
+									echo "Sleeping for 10 seconds"
+									sleep 10
 								done
 							done
 						done

@@ -371,7 +371,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
 
     local_training_time = toc() #Local models
     local_training_time = floor(local_training_time,2)
-    store_masterlog(local_training_time, string("train_local_model/","temp_",myid()),"local_training_seconds",nofworkers)
+    store_masterlog(local_training_time, string("train_local_model/","temp_",myid()),"local_training_seconds")
     info("\n Merged train local model logs")
     mergelogs("train_local_model")
     info("Done training local models")
@@ -388,7 +388,7 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
     train_global_model_time = toc()
     train_global_model_time = floor(train_global_model_time ,2)
 
-    store_masterlog(train_global_model_time,string("train_global_model/","temp_",myid(),".csv"),"train_global_model_seconds",nofworkers)
+    store_masterlog(train_global_model_time,string("train_global_model/","temp_",myid(),".csv"),"train_global_model_seconds")
     info("\n Merged train global model logs")
     mergelogs("train_global_model")
 
@@ -463,11 +463,11 @@ function run_experiments(nofworkers, nofexamples, func, num_nodes = 2, dim = 2, 
     println("Number of nodes:")
     println(nodes_neighbors)
 
-    info("Stopping the container analyser daemon")    
+    #info("Stopping the container analyser daemon")    
     rmalldockerworkers()
-    #rmprocs(workers());
-    info("Removed all workers and containers")
-    info("EXPERIMENT INTERACTION COMPLETE")
+    rmprocs(workers());
+    #info("Removed all workers and containers")
+    info("EXPERIMENT INTERACTION COMPLETE")    
 end
 
 function execute_experiment(args)

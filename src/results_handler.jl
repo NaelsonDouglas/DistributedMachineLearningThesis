@@ -106,7 +106,7 @@ function mergelogs(logsdir::String,EXECUTING_PATH::String=EXECUTING_PATH)
         end                
     end
 
-    rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
+    #rm(EXECUTING_PATH*logsdir;force=true,recursive=true)
     info(EXECUTING_PATH*logsdir*" deleted")
     flush(f)
     close(f)
@@ -135,7 +135,9 @@ function generatetable(resultsdir::String)
 
         currenttable = CSV.read(l)
         rm(l)          
-        table = hcat(table,currenttable)
+	try
+	        table = hcat(table,currenttable)
+	end
     end
     #Makes the column "elapsed_time" be the last column
     
